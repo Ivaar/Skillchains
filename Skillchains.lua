@@ -34,12 +34,15 @@ texts = require('texts')
 packets = require('packets')
 config = require('config')
 res = require('resources')
+require('tables')
+require('strings')
+require('logger')
 
 default = {
     ws=true,
     ma=true,
     display = {
-        text={size=10,font='Consolas'},
+        text={size=12,font='Ubuntu mono'},
         pos={x=0,y=0},
         },
     }
@@ -186,6 +189,8 @@ blue_magic = L{
     [693] = {id=693,en='Quadrastrike',skillchain_a='Liquefaction',skillchain_b='Scission'},
     [697] = {id=697,en='Amorphic Spikes',skillchain_a='Gravitation',skillchain_b=''},
     [699] = {id=699,en='Barbed Crescent',skillchain_a='Distortion',skillchain_b='Liquefaction'},
+	[709] = {id=709,en='Thrashing Assault',skillchain_a='Fusion',skillchain_b=''},
+	[740] = {id=740,en="Tourbillion",skillchain_a='Light',skillchain_b='Fragmentation'},
     [743] = {id=743,en='Bloodrake',skillchain_a='Darkness',skillchain_b='Gravitation'},
     } 
 
@@ -347,21 +352,21 @@ function burst_results(reson)
 end
 
 function chain_results(reson)
-    local skills,spells = {},{}
-    local m_job = windower.ffxi.get_player().main_job
-    local abilities = windower.ffxi.get_abilities()
-    local spell_table,sch
-    if m_job == 'SMN' then
-        spell_table = blood_pacts
-    elseif m_job == 'BLU' then
-        spell_table = blue_magic
-    elseif m_job == 'SCH' and settings.ma then
-        sch = true
-    end
-    for key,element in ipairs(reson.active) do
-        local props = prop_info[element].properties
-        for x=1,#props do
-            for k,v in pairs(props[x]) do
+	local skills,spells = {},{}
+	local m_job = windower.ffxi.get_player().main_job
+	local abilities = windower.ffxi.get_abilities()
+	local spell_table,sch
+	if m_job == 'SMN' then
+		spell_table = blood_pacts
+	elseif m_job == 'BLU' then
+		spell_table = blue_magic
+	elseif m_job == 'SCH' and settings.ma then
+		sch = true
+	end
+	for key,element in ipairs(reson.active) do
+		local props = prop_info[element].properties
+		for x=1,#props do
+			for k,v in pairs(props[x]) do
                 local lvl = prop_info[v].level
                 if lvl3:contains(v) and lvl3:contains(element) then
                     lvl = 4
@@ -387,19 +392,48 @@ function chain_results(reson)
                         end
                     end
                 end
+				
                 if settings.ws then
                     for i,t in ipairs(abilities.weapon_skills) do
                         local ws = res.weapon_skills[t]
-                        if ws and S{ws.skillchain_a,ws.skillchain_b,ws.skillchain_c}:contains(k) and
-                        (not skills[ws.en] or skills[ws.en].lvl < lvl) then
-                            skills[ws.en] = {lvl=lvl,prop=v}
+                        if ws and S{ws.skillchain_a,ws.skillchain_b,ws.skillchain_c}:contains(k) and 
+						(not skills[ws.en] or skills[ws.en].lvl < lvl) then
+							new_v = check(ws.skillchain_a,ws.skillchain_b,ws.skillchain_c,props)
+							skills[ws.en] = {lvl=prop_info[new_v].level,prop=new_v}
                         end
                     end
                 end
             end
         end
     end
+	
     return {[1]=skills,[2]=spells}
+end
+
+function check(ws_ele_a,ws_ele_b,ws_ele_c,props)
+	--table.vprint(props)
+	for x=1,#props do
+		for k,v in pairs(props[x]) do
+			if k == ws_ele_a then
+				return v
+			end
+		end
+	end
+	for x=1,#props do
+		for k,v in pairs(props[x]) do
+			if k == ws_ele_b then
+				return v
+			end
+		end
+	end
+	for x=1,#props do
+		for k,v in pairs(props[x]) do
+			if k == ws_ele_c then
+				return v
+			end
+		end
+	end
+
 end
 
 function display_results(targ)
@@ -410,15 +444,15 @@ function display_results(targ)
         for i,t in ipairs(results) do
             for k,v in pairs(t) do
                 if v and v.lvl == x then
-                    str = '\n %s  >> Lv.%d %s ':format(k,v.lvl,v.prop)..str
+                    str = '\n %s >> Lv.%d %s ':format(k:rpad(' ', 15),v.lvl,v.prop)..str
                 end
             end
         end
     end
-    return ' Step: %d >> [%s] >>':format(resonating[targ].step,resonating[targ].ws.en)..chain..burst..str
+    return ' Step: %d >> [%s] >>':format(resonating[targ].step,resonating[targ].ws.en)..chain..burst..'\n'..str
 end
 
-windower.register_event('prerender', function()
+function do_stuff()
     local targ = windower.ffxi.get_mob_by_target('t')
     local now = os.time()
     for k,v in pairs(resonating) do
@@ -441,7 +475,14 @@ windower.register_event('prerender', function()
     elseif not visible then
         skill_props:hide()
     end
-end)
+end
+
+function loop()
+	while doloop do
+		do_stuff()
+		coroutine.sleep(0.2)
+	end	
+end
 
 windower.register_event('incoming chunk', function(id,original,modified,injected,blocked)
     if id == 0x028 then
@@ -522,3 +563,12 @@ function reset()
 end
 
 windower.register_event('load','zone change','logout', reset)
+
+windower.register_event('unload', function()
+	doloop = false
+end)
+
+windower.register_event('load', function()
+	doloop = true
+	loop()
+end)
