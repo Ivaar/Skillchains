@@ -471,33 +471,31 @@ function chain_results(reson)
                 if settings.ws then
                     for i,t in ipairs(abilities.weapon_skills) do
                         local ws = res.weapon_skills[t]
-						--[[if radiance_ws:contains(ws.en) or umbra_ws:contains(ws.en) then		
-							if aeonic and aftermath_lvl and reson.step > 0 then
-								ws.skillchain_c = aftermath_props[ws.en].skillchain_c
-								ws.skillchain_b = aftermath_props[ws.en].skillchain_b
-								ws.skillchain_a = aftermath_props[ws.en].skillchain_a
-							end
-						end]]
-                        if ws and S{ws.skillchain_a,ws.skillchain_b,ws.skillchain_c}:contains(k) and 
-						(not skills[ws.en] or skills[ws.en].lvl < lvl) then
-							local new_v = check(ws.skillchain_a,ws.skillchain_b,ws.skillchain_c,props)
-							skills[ws.en] = {lvl=prop_info[new_v].level,prop=new_v}
-                        end
-                    end
-                end
+			if (radiance_ws:contains(ws.en) or umbra_ws:contains(ws.en)) and aeonic and aftermath_lvl and reson.step > 0 then
+				ws.skillchain_c = aftermath_props[ws.en].skillchain_c
+				ws.skillchain_b = aftermath_props[ws.en].skillchain_b
+				ws.skillchain_a = aftermath_props[ws.en].skillchain_a
+			end
+			if ws and S{ws.skillchain_a,ws.skillchain_b,ws.skillchain_c}:contains(k) and 
+			(not skills[ws.en] or skills[ws.en].lvl < lvl) then
+				local new_v = check(ws.skillchain_a,ws.skillchain_b,ws.skillchain_c,props)
+				skills[ws.en] = {lvl=prop_info[new_v].level,prop=new_v}
+			end
+		    end
+		end
 
-				if settings.pet and m_job == 'BST' and windower.ffxi.get_mob_by_target('pet') then
-					for i,t in ipairs(abilities.job_abilities) do
-						local ability = res.job_abilities:with('id', t)
-						if ability.type == 'Monster' then
-							ability = table.with(jug_pets,'en',ability.en)	
-							if S{ability.skillchain_a,ability.skillchain_b}:contains(k) then
-								local new_v = check(ability.skillchain_a,ability.skillchain_b,'',props)
-								petskills[ability.en] = {lvl=prop_info[new_v].level,prop=new_v}
-							end							
-						end
-					end
+		if settings.pet and m_job == 'BST' and windower.ffxi.get_mob_by_target('pet') then
+			for i,t in ipairs(abilities.job_abilities) do
+				local ability = res.job_abilities:with('id', t)
+				if ability.type == 'Monster' then
+					ability = table.with(jug_pets,'en',ability.en)	
+					if S{ability.skillchain_a,ability.skillchain_b}:contains(k) then
+						local new_v = check(ability.skillchain_a,ability.skillchain_b,'',props)
+						petskills[ability.en] = {lvl=prop_info[new_v].level,prop=new_v}
+					end							
 				end
+			end
+		end
             end
         end
     end   
