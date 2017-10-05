@@ -5,11 +5,15 @@ Displays a text object containing skillchain elements resonating on current targ
 along with a list of weapon skills that can skillchain based on the weapon you have currently equipped. 
 
 //sc move    -- displays text box click and drag it to desired location.
+
 //sc save    -- saves changes to settings
 
 The following commands accept on/off if noo argument is provided it will toggle.
+
 //sc ws      --hide/display weapon skills 
+
 //sc ma      --hide/display magic burst elements
+
 //sc pet     --hide/display pet skills
 
 
