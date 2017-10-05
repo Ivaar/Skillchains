@@ -8,6 +8,7 @@ along with a list of weapon skills that can skillchain based on the weapon you h
 
 //sc save    -- saves changes to settings
 
+
 The following commands accept on/off if noo argument is provided it will toggle.
 
 //sc ws      --hide/display weapon skills 
