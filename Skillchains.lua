@@ -43,7 +43,7 @@ require('logger')
 default = {
     ws=true,
     ma=true,
-	pet=true,											
+    pet=true,                                            
     display = {
         text={size=12,font='Consolas'},
         pos={x=0,y=0},
@@ -63,115 +63,115 @@ umbra_ws = S{'Shattersoul','Entropy','Requiescat','Ruinator','Stardiver'}
 aeonic_weapons = S{'Heishi Shorinken','Godhands','Aeneas','Sequence','Lionheart','Tri-edge','Chango','Anguta','Trishula','Dojikiri Yasutsuna','Tishtrya','Khatvanga','Fail-Not','Fomalhaut'}
 
 aftermath_props = T{
-	['Blade: Shun'] = {skillchain_a="Light",skillchain_b="Fusion",skillchain_c="Impaction"}, 
-	['Apex Arrow'] = {skillchain_a="Light",skillchain_b="Fragmentation",skillchain_c="Transfixion"}, 
-	['Last Stand'] = {skillchain_a="Light",skillchain_b="Fusion",skillchain_c="Reverberation"}, 
-	['Exenterator'] = {skillchain_a="Light",skillchain_b="Fragmentation",skillchain_c="Scission"}, 
-	['Realmrazor'] = {skillchain_a="Light",skillchain_b="Fusion",skillchain_c="Impaction"}, 
-	['Resolution'] = {skillchain_a="Light",skillchain_b="Fragmentation",skillchain_c="Scission"}, 
-	['Shijin Spiral'] = {skillchain_a="Light",skillchain_b="Fusion",skillchain_c="Reverberation"}, 
-	['Tachi: Shoha'] = {skillchain_a="Light",skillchain_b="Fragmentation",skillchain_c="Compression"}, 
-	['Upheaval'] = {skillchain_a="Light",skillchain_b="Fusion",skillchain_c="Compression"}, 
-	['Shattersoul'] = {skillchain_a="Darkness",skillchain_b="Gravitation",skillchain_c="Induration"}, 
-	['Entropy'] = {skillchain_a="Darkness",skillchain_b="Gravitation",skillchain_c="Reverberation"}, 
-	['Requiescat'] = {skillchain_a="Darkness",skillchain_b="Gravitation",skillchain_c="Scission"}, 
-	['Ruinator'] = {skillchain_a="Darkness",skillchain_b="Distortion",skillchain_c="Detonation"}, 
-	['Stardiver'] = {skillchain_a="Darkness",skillchain_b="Gravitation",skillchain_c="Transfixion"}, 
-	}
+    ['Blade: Shun'] = {skillchain_a="Light",skillchain_b="Fusion",skillchain_c="Impaction"}, 
+    ['Apex Arrow'] = {skillchain_a="Light",skillchain_b="Fragmentation",skillchain_c="Transfixion"}, 
+    ['Last Stand'] = {skillchain_a="Light",skillchain_b="Fusion",skillchain_c="Reverberation"}, 
+    ['Exenterator'] = {skillchain_a="Light",skillchain_b="Fragmentation",skillchain_c="Scission"}, 
+    ['Realmrazor'] = {skillchain_a="Light",skillchain_b="Fusion",skillchain_c="Impaction"}, 
+    ['Resolution'] = {skillchain_a="Light",skillchain_b="Fragmentation",skillchain_c="Scission"}, 
+    ['Shijin Spiral'] = {skillchain_a="Light",skillchain_b="Fusion",skillchain_c="Reverberation"}, 
+    ['Tachi: Shoha'] = {skillchain_a="Light",skillchain_b="Fragmentation",skillchain_c="Compression"}, 
+    ['Upheaval'] = {skillchain_a="Light",skillchain_b="Fusion",skillchain_c="Compression"}, 
+    ['Shattersoul'] = {skillchain_a="Darkness",skillchain_b="Gravitation",skillchain_c="Induration"}, 
+    ['Entropy'] = {skillchain_a="Darkness",skillchain_b="Gravitation",skillchain_c="Reverberation"}, 
+    ['Requiescat'] = {skillchain_a="Darkness",skillchain_b="Gravitation",skillchain_c="Scission"}, 
+    ['Ruinator'] = {skillchain_a="Darkness",skillchain_b="Distortion",skillchain_c="Detonation"}, 
+    ['Stardiver'] = {skillchain_a="Darkness",skillchain_b="Gravitation",skillchain_c="Transfixion"}, 
+    }
 
 skillchains = L{
-	[288] = 'Light',
-	[289] = 'Darkness',
-	[290] = 'Gravitation',
-	[291] = 'Fragmentation',
-	[292] = 'Distortion',
-	[293] = 'Fusion',
-	[294] = 'Compression',
-	[295] = 'Liquefaction',
-	[296] = 'Induration',
-	[297] = 'Reverberation',
-	[298] = 'Transfixion',
-	[299] = 'Scission',
-	[300] = 'Detonation',
-	[301] = 'Impaction',
-	[385] = 'Light',
-	[386] = 'Darkness',
-	[387] = 'Gravitation',
-	[388] = 'Fragmentation',
-	[389] = 'Distortion',
-	[390] = 'Fusion',
-	[391] = 'Compression',
-	[392] = 'Liquefaction',
-	[393] = 'Induration',
-	[394] = 'Reverberation',
-	[395] = 'Transfixion',
-	[396] = 'Scission',
-	[397] = 'Detonation',
-	[398] = 'Impaction',
-	[767] = 'Radiance',
-	[768] = 'Umbra',
-	[769] = 'Radiance',
-	[770] = 'Umbra',
-	}
+    [288] = 'Light',
+    [289] = 'Darkness',
+    [290] = 'Gravitation',
+    [291] = 'Fragmentation',
+    [292] = 'Distortion',
+    [293] = 'Fusion',
+    [294] = 'Compression',
+    [295] = 'Liquefaction',
+    [296] = 'Induration',
+    [297] = 'Reverberation',
+    [298] = 'Transfixion',
+    [299] = 'Scission',
+    [300] = 'Detonation',
+    [301] = 'Impaction',
+    [385] = 'Light',
+    [386] = 'Darkness',
+    [387] = 'Gravitation',
+    [388] = 'Fragmentation',
+    [389] = 'Distortion',
+    [390] = 'Fusion',
+    [391] = 'Compression',
+    [392] = 'Liquefaction',
+    [393] = 'Induration',
+    [394] = 'Reverberation',
+    [395] = 'Transfixion',
+    [396] = 'Scission',
+    [397] = 'Detonation',
+    [398] = 'Impaction',
+    [767] = 'Radiance',
+    [768] = 'Umbra',
+    [769] = 'Radiance',
+    [770] = 'Umbra',
+    }
 
 colors = {
-	['Impaction'] = '\\cs(255,0,255)',
-	['Lightning'] = '\\cs(255,0,255)',
-	['Darkness'] = '\\cs(0,0,204)',
-	['Umbra'] = '\\cs(0,0,204)',
-	['Gravitation'] = '\\cs(102,51,0)',
-	['Fragmentation'] = '\\cs(250,156,247)',
-	['Distortion'] = '\\cs(51,153,255)',
-	['Compression'] = '\\cs(0,0,204)',
-	['Induration'] = '\\cs(0,255,255)',
-	['Ice'] = '\\cs(0,255,255)',
-	['Reverberation'] = '\\cs(0,0,255)',
-	['Water'] = '\\cs(0,0,255)',
-	['Transfixion'] = '\\cs(255,255,255)',
-	['Scission'] = '\\cs(153,76,0)',
-	['Stone'] = '\\cs(153,76,0)',
-	['Earth'] = '\\cs(153,76,0)',
-	['Detonation'] = '\\cs(102,255,102)',
-	['Wind'] = '\\cs(102,255,102)',
-	['Fusion'] = '\\cs(255,102,102)',
-	['Liquefaction'] = '\\cs(255,0,0)',
-	['Fire'] = '\\cs(255,0,0)',
-	}
+    ['Impaction'] = '\\cs(255,0,255)',
+    ['Lightning'] = '\\cs(255,0,255)',
+    ['Darkness'] = '\\cs(0,0,204)',
+    ['Umbra'] = '\\cs(0,0,204)',
+    ['Gravitation'] = '\\cs(102,51,0)',
+    ['Fragmentation'] = '\\cs(250,156,247)',
+    ['Distortion'] = '\\cs(51,153,255)',
+    ['Compression'] = '\\cs(0,0,204)',
+    ['Induration'] = '\\cs(0,255,255)',
+    ['Ice'] = '\\cs(0,255,255)',
+    ['Reverberation'] = '\\cs(0,0,255)',
+    ['Water'] = '\\cs(0,0,255)',
+    ['Transfixion'] = '\\cs(255,255,255)',
+    ['Scission'] = '\\cs(153,76,0)',
+    ['Stone'] = '\\cs(153,76,0)',
+    ['Earth'] = '\\cs(153,76,0)',
+    ['Detonation'] = '\\cs(102,255,102)',
+    ['Wind'] = '\\cs(102,255,102)',
+    ['Fusion'] = '\\cs(255,102,102)',
+    ['Liquefaction'] = '\\cs(255,0,0)',
+    ['Fire'] = '\\cs(255,0,0)',
+    }
     
 elements = L{
-	[0]={mb='Fire',sc='Liquefaction'},
-	[1]={mb='Ice',sc='Induration'},
-	[2]={mb='Wind',sc='Detonation'},
-	[3]={mb='Earth',sc='Scission'},
-	[4]={mb='Lightning',sc='Impaction'},
-	[5]={mb='Water',sc='Reverberation'},
-	[6]={mb='Light',sc='Transfixion'},
-	[7]={mb='Darkness',sc='Compression'},
-	}
+    [0]={mb='Fire',sc='Liquefaction'},
+    [1]={mb='Ice',sc='Induration'},
+    [2]={mb='Wind',sc='Detonation'},
+    [3]={mb='Earth',sc='Scission'},
+    [4]={mb='Lightning',sc='Impaction'},
+    [5]={mb='Water',sc='Reverberation'},
+    [6]={mb='Light',sc='Transfixion'},
+    [7]={mb='Darkness',sc='Compression'},
+    }
 
 prop_info = {
-	Radiance = {elements='Fire Wind Lightning Light',properties={[1]={Light='Light'}},level=3},
-	Umbra = {elements='Earth Ice Water Darkness',properties={[1]={Darkness='Darkness'}},level=3},
-	Light = {elements='Fire Wind Lightning Light',properties={[1]={Light='Light'}},level=3},
-	Darkness = {elements='Earth Ice Water Darkness',properties={[1]={Darkness='Darkness'}},level=3},
-	Gravitation = {elements='Earth Darkness',properties={[1]={Distortion='Darkness'},[2]={Fragmentation='Fragmentation'}},level=2},
-	Fragmentation = {elements='Wind Lightning',properties={[1]={Fusion='Light'},[2]={Distortion='Distortion'}},level=2},
-	Distortion = {elements='Ice Water',properties={[1]={Gravitation='Darkness'},[2]={Fusion='Fusion'}},level=2},
-	Fusion = {elements='Fire Light',properties={[1]={Fragmentation='Light'},[2]={Gravitation='Gravitation'}},level=2},
-	Compression = {elements='Darkness',properties={[1]={Transfixion='Transfixion'},[2]={Detonation='Detonation'}},level=1},
-	Liquefaction = {elements='Fire',properties={[1]={Impaction='Fusion'},[2]={Scission='Scission'}},level=1},
-	Induration = {elements='Ice',properties={[1]={Reverberation='Fragmentation'},[2]={Compression='Compression'},[3]={Impaction='Impaction'}},level=1},
-	Reverberation = {elements='Water',properties={[1]={Induration='Induration'},[2]={Impaction='Impaction'}},level=1},
-	Transfixion = {elements='Light',properties={[1]={Scission='Distortion'},[2]={Reverberation='Reverberation'},[3]={Compression='Compression'}},level=1},
-	Scission = {elements='Earth',properties={[1]={Liquefaction='Liquefaction'},[2]={Reverberation='Reverberation'},[3]={Detonation='Detonation'}},level=1},
-	Detonation = {elements='Wind',properties={[1]={['Compression']='Gravitation'},[2]={['Scission']='Compression'}},level=1},
-	Impaction = {elements='Lightning',properties={[1]={Liquefaction='Liquefaction'},[2]={Detonation='Detonation'}},level=1},
-	}
+    Radiance = {elements='Fire Wind Lightning Light',properties={[1]={Light='Light'}},level=3},
+    Umbra = {elements='Earth Ice Water Darkness',properties={[1]={Darkness='Darkness'}},level=3},
+    Light = {elements='Fire Wind Lightning Light',properties={[1]={Light='Light'}},level=3},
+    Darkness = {elements='Earth Ice Water Darkness',properties={[1]={Darkness='Darkness'}},level=3},
+    Gravitation = {elements='Earth Darkness',properties={[1]={Distortion='Darkness'},[2]={Fragmentation='Fragmentation'}},level=2},
+    Fragmentation = {elements='Wind Lightning',properties={[1]={Fusion='Light'},[2]={Distortion='Distortion'}},level=2},
+    Distortion = {elements='Ice Water',properties={[1]={Gravitation='Darkness'},[2]={Fusion='Fusion'}},level=2},
+    Fusion = {elements='Fire Light',properties={[1]={Fragmentation='Light'},[2]={Gravitation='Gravitation'}},level=2},
+    Compression = {elements='Darkness',properties={[1]={Transfixion='Transfixion'},[2]={Detonation='Detonation'}},level=1},
+    Liquefaction = {elements='Fire',properties={[1]={Impaction='Fusion'},[2]={Scission='Scission'}},level=1},
+    Induration = {elements='Ice',properties={[1]={Reverberation='Fragmentation'},[2]={Compression='Compression'},[3]={Impaction='Impaction'}},level=1},
+    Reverberation = {elements='Water',properties={[1]={Induration='Induration'},[2]={Impaction='Impaction'}},level=1},
+    Transfixion = {elements='Light',properties={[1]={Scission='Distortion'},[2]={Reverberation='Reverberation'},[3]={Compression='Compression'}},level=1},
+    Scission = {elements='Earth',properties={[1]={Liquefaction='Liquefaction'},[2]={Reverberation='Reverberation'},[3]={Detonation='Detonation'}},level=1},
+    Detonation = {elements='Wind',properties={[1]={['Compression']='Gravitation'},[2]={['Scission']='Compression'}},level=1},
+    Impaction = {elements='Lightning',properties={[1]={Liquefaction='Liquefaction'},[2]={Detonation='Detonation'}},level=1},
+    }
 
 blood_pacts = L{
     [513] = {id=513,avatar='Carbuncle',en='Poison Nails',skillchain_a='Transfixion'},
     [521] = {id=521,avatar='Cait Sith',en='Regal Scratch',skillchain_a='Scission'},
-	[780] = {id=780,avatar='Cait Sith',en='Regal Gash',skillchain_a='Distortion',skillchain_b='Detonation'},
+    [780] = {id=780,avatar='Cait Sith',en='Regal Gash',skillchain_a='Distortion',skillchain_b='Detonation'},
     [528] = {id=528,avatar='Fenrir',en='Moonlit Charge',skillchain_a='Compression'},
     [529] = {id=529,avatar='Fenrir',en='Crescent Fang',skillchain_a='Transfixion'},
     [534] = {id=534,avatar='Fenrir',en='Eclipse Bite',skillchain_a='Gravitation',skillchain_b='Scission'},
@@ -183,7 +183,7 @@ blood_pacts = L{
     [562] = {id=562,avatar='Titan',en='Rock Buster',skillchain_a='Reverberation'},
     [563] = {id=563,avatar='Titan',en='Megalith Throw',skillchain_a='Induration'},
     [566] = {id=566,avatar='Titan',en='Mountain Buster',skillchain_a='Gravitation',skillchain_b='Induration'},
-	[570] = {id=570,avatar='Titan',en='Crag Throw',skillchain_a='Gravitation',skillchain_b='Scission'},
+    [570] = {id=570,avatar='Titan',en='Crag Throw',skillchain_a='Gravitation',skillchain_b='Scission'},
     [576] = {id=576,avatar='Leviathan',en='Barracuda Dive',skillchain_a='Reverberation'},
     [578] = {id=578,avatar='Leviathan',en='Tail Whip',skillchain_a='Detonation'},
     [582] = {id=582,avatar='Leviathan',en='Spinning Dive',skillchain_a='Distortion',skillchain_b='Detonation'},
@@ -194,9 +194,9 @@ blood_pacts = L{
     [614] = {id=614,avatar='Shiva',en='Rush',skillchain_a='Distortion',skillchain_b='Scission'},
     [624] = {id=624,avatar='Ramuh',en='Shock Strike',skillchain_a='Impaction'}, 
     [630] = {id=630,avatar='Ramuh',en='Chaotic Strike',skillchain_a='Fragmentation',skillchain_b='Transfixion'},
-	[634] = {id=634,avatar='Ramuh',en="Volt Strike",skillchain_a='Fragmentation',skillchain_b='Scission'},
+    [634] = {id=634,avatar='Ramuh',en="Volt Strike",skillchain_a='Fragmentation',skillchain_b='Scission'},
     [656] = {id=656,avatar='Diabolos',en='Camisado',skillchain_a='Compression'},
-	[667] = {id=667,avatar='Diabolos',en='Blindside',skillchain_a='Gravitation',skillchain_b='Transfixion'},
+    [667] = {id=667,avatar='Diabolos',en='Blindside',skillchain_a='Gravitation',skillchain_b='Transfixion'},
     }
     
 blue_magic = L{
@@ -250,8 +250,8 @@ blue_magic = L{
     [693] = {id=693,en='Quadrastrike',skillchain_a='Liquefaction',skillchain_b='Scission'},
     [697] = {id=697,en='Amorphic Spikes',skillchain_a='Gravitation',skillchain_b=''},
     [699] = {id=699,en='Barbed Crescent',skillchain_a='Distortion',skillchain_b='Liquefaction'},
-	[709] = {id=709,en='Thrashing Assault',skillchain_a='Fusion',skillchain_b=''},
-	[740] = {id=740,en="Tourbillion",skillchain_a='Light',skillchain_b='Fragmentation'},
+    [709] = {id=709,en='Thrashing Assault',skillchain_a='Fusion',skillchain_b=''},
+    [740] = {id=740,en="Tourbillion",skillchain_a='Light',skillchain_b='Fragmentation'},
     [743] = {id=743,en='Bloodrake',skillchain_a='Darkness',skillchain_b='Gravitation'},
     } 
 
@@ -371,23 +371,23 @@ function apply_props(packet,abil,ability)
         local closed
         if (lvl3:contains(skillchain) and reson and not reson.closed and reson.active[1] == skillchain and
         (reson.chain or reson.ws.skillchain_a == abil.skillchain_a)) or
-			lvl4:contains(skillchain) or resonating[mob_id].step == 6 then
-			closed = true
-		end
+            lvl4:contains(skillchain) or resonating[mob_id].step == 6 then
+            closed = true
+        end
         resonating[mob_id] = {active={skillchain},timer=now,ws=abil,chain=true,closed=closed,step=step}
     elseif L{110,161,162,185,187}:contains(packet['Target 1 Action 1 Message']) then           
-		local aeonic,aftermath_lvl = aeonicinfo()
-		if radiance_ws:contains(abil.en) or umbra_ws:contains(abil.en) then 
-			if aeonic and aftermath_lvl then 
-				abil.skillchain_c = aftermath_props[abil.en].skillchain_c
-				abil.skillchain_b = aftermath_props[abil.en].skillchain_b
-				abil.skillchain_a = aftermath_props[abil.en].skillchain_a
-			else
-				abil.skillchain_c = ''
-				abil.skillchain_b = aftermath_props[abil.en].skillchain_c
-				abil.skillchain_a = aftermath_props[abil.en].skillchain_b
-			end
-		end
+        local aeonic,aftermath_lvl = aeonicinfo()
+        if radiance_ws:contains(abil.en) or umbra_ws:contains(abil.en) then 
+            if aeonic and aftermath_lvl then 
+                abil.skillchain_c = aftermath_props[abil.en].skillchain_c
+                abil.skillchain_b = aftermath_props[abil.en].skillchain_b
+                abil.skillchain_a = aftermath_props[abil.en].skillchain_a
+            else
+                abil.skillchain_c = ''
+                abil.skillchain_b = aftermath_props[abil.en].skillchain_c
+                abil.skillchain_a = aftermath_props[abil.en].skillchain_b
+            end
+        end
         resonating[mob_id] = {active={abil.skillchain_a,abil.skillchain_b,abil.skillchain_c},timer=now,ws=abil,chain=false,step=1}
     elseif L{317}:contains(packet['Target 1 Action 1 Message']) then
         resonating[mob_id] = {active={abil.skillchain_a},timer=now,ws=abil,chain=false,step=1}
@@ -427,21 +427,21 @@ end
 
 function chain_results(reson)
     local skills,spells,petskills = {},{},{}
-	local m_job = windower.ffxi.get_player().main_job
-	local abilities = windower.ffxi.get_abilities()
-	local spell_table
-	local aeonic,aftermath_lvl = aeonicinfo()										  
-	if m_job == 'SMN' then
-		spell_table = blood_pacts
-	elseif m_job == 'BLU' then
-		spell_table = blue_magic
-	elseif m_job == 'BST' then
-		spell_table = jug_pets
-	end
-	for key,element in ipairs(reson.active) do
-		local props = prop_info[element].properties
-		for x=1,#props do
-			for k,v in pairs(props[x]) do
+    local m_job = windower.ffxi.get_player().main_job
+    local abilities = windower.ffxi.get_abilities()
+    local spell_table
+    local aeonic,aftermath_lvl = aeonicinfo()                                          
+    if m_job == 'SMN' then
+        spell_table = blood_pacts
+    elseif m_job == 'BLU' then
+        spell_table = blue_magic
+    elseif m_job == 'BST' then
+        spell_table = jug_pets
+    end
+    for key,element in ipairs(reson.active) do
+        local props = prop_info[element].properties
+        for x=1,#props do
+            for k,v in pairs(props[x]) do
                 local lvl = prop_info[v].level
                 if lvl3:contains(v) and lvl3:contains(element) then
                     lvl = 4
@@ -467,35 +467,35 @@ function chain_results(reson)
                         end
                     end
                 end
-				
+                
                 if settings.ws then
                     for i,t in ipairs(abilities.weapon_skills) do
                         local ws = res.weapon_skills[t]
-			if (radiance_ws:contains(ws.en) or umbra_ws:contains(ws.en)) and aeonic and aftermath_lvl and reson.step > 0 then
-				ws.skillchain_c = aftermath_props[ws.en].skillchain_c
-				ws.skillchain_b = aftermath_props[ws.en].skillchain_b
-				ws.skillchain_a = aftermath_props[ws.en].skillchain_a
-			end
-			if ws and S{ws.skillchain_a,ws.skillchain_b,ws.skillchain_c}:contains(k) and 
-			(not skills[ws.en] or skills[ws.en].lvl < lvl) then
-				local new_v = check(ws.skillchain_a,ws.skillchain_b,ws.skillchain_c,props)
-				skills[ws.en] = {lvl=prop_info[new_v].level,prop=new_v}
-			end
-		    end
-		end
+            if (radiance_ws:contains(ws.en) or umbra_ws:contains(ws.en)) and aeonic and aftermath_lvl and reson.step > 0 then
+                ws.skillchain_c = aftermath_props[ws.en].skillchain_c
+                ws.skillchain_b = aftermath_props[ws.en].skillchain_b
+                ws.skillchain_a = aftermath_props[ws.en].skillchain_a
+            end
+            if ws and S{ws.skillchain_a,ws.skillchain_b,ws.skillchain_c}:contains(k) and 
+            (not skills[ws.en] or skills[ws.en].lvl < lvl) then
+                local new_v = check(ws.skillchain_a,ws.skillchain_b,ws.skillchain_c,props)
+                skills[ws.en] = {lvl=prop_info[new_v].level,prop=new_v}
+            end
+            end
+        end
 
-		if settings.pet and m_job == 'BST' and windower.ffxi.get_mob_by_target('pet') then
-			for i,t in ipairs(abilities.job_abilities) do
-				local ability = res.job_abilities:with('id', t)
-				if ability.type == 'Monster' then
-					ability = table.with(jug_pets,'en',ability.en)	
-					if S{ability.skillchain_a,ability.skillchain_b}:contains(k) then
-						local new_v = check(ability.skillchain_a,ability.skillchain_b,'',props)
-						petskills[ability.en] = {lvl=prop_info[new_v].level,prop=new_v}
-					end							
-				end
-			end
-		end
+        if settings.pet and m_job == 'BST' and windower.ffxi.get_mob_by_target('pet') then
+            for i,t in ipairs(abilities.job_abilities) do
+                local ability = res.job_abilities:with('id', t)
+                if ability.type == 'Monster' then
+                    ability = table.with(jug_pets,'en',ability.en)    
+                    if S{ability.skillchain_a,ability.skillchain_b}:contains(k) then
+                        local new_v = check(ability.skillchain_a,ability.skillchain_b,'',props)
+                        petskills[ability.en] = {lvl=prop_info[new_v].level,prop=new_v}
+                    end                            
+                end
+            end
+        end
             end
         end
     end   
@@ -503,53 +503,53 @@ function chain_results(reson)
 end
 
 function aeonicinfo()
-	
-	local buffs = windower.ffxi.get_player().buffs
-	local equip = windower.ffxi.get_items().equipment
-	local mainweapon = res.items[windower.ffxi.get_items(equip.main_bag, equip.main).id].en
-	local aftermath_lvl = nil
-	local aeonic_found = nil
-	
-	for i,v in ipairs(buffs) do
-		if v == 272 then
-			aftermath_lvl = 3
-		elseif v == 271 then
-			aftermath_lvl = 2
-		elseif v == 270 then
-			aftermath_lvl = 1
-		end
-	end
-	
-	if aeonic_weapons:contains(mainweapon) then 
-		aeonic_found = true
-	end
-	
-	return aeonic_found,aftermath_lvl
+    
+    local buffs = windower.ffxi.get_player().buffs
+    local equip = windower.ffxi.get_items().equipment
+    local mainweapon = res.items[windower.ffxi.get_items(equip.main_bag, equip.main).id].en
+    local aftermath_lvl = nil
+    local aeonic_found = nil
+    
+    for i,v in ipairs(buffs) do
+        if v == 272 then
+            aftermath_lvl = 3
+        elseif v == 271 then
+            aftermath_lvl = 2
+        elseif v == 270 then
+            aftermath_lvl = 1
+        end
+    end
+    
+    if aeonic_weapons:contains(mainweapon) then 
+        aeonic_found = true
+    end
+    
+    return aeonic_found,aftermath_lvl
 end
 
 function check(ws_ele_a,ws_ele_b,ws_ele_c,props)
-	--table.vprint(props)
-	for x=1,#props do
-		for k,v in pairs(props[x]) do
-			if k == ws_ele_a then
-				return v
-			end
-		end
-	end
-	for x=1,#props do
-		for k,v in pairs(props[x]) do
-			if k == ws_ele_b then
-				return v
-			end
-		end
-	end
-	for x=1,#props do
-		for k,v in pairs(props[x]) do
-			if k == ws_ele_c then
-				return v
-			end
-		end
-	end
+    --table.vprint(props)
+    for x=1,#props do
+        for k,v in pairs(props[x]) do
+            if k == ws_ele_a then
+                return v
+            end
+        end
+    end
+    for x=1,#props do
+        for k,v in pairs(props[x]) do
+            if k == ws_ele_b then
+                return v
+            end
+        end
+    end
+    for x=1,#props do
+        for k,v in pairs(props[x]) do
+            if k == ws_ele_c then
+                return v
+            end
+        end
+    end
 
 end
 
@@ -560,11 +560,11 @@ function display_results(targ)
         for i,t in ipairs(results) do
             for k,v in pairs(t) do
                 if v and v.lvl == x then
-					if table.with(jug_pets,'en',k) then
-						str = ' \\cs(0,255,0)%s\\cs(255,255,255)  >> Lv.%d %s \n':format(k:rpad(' ', 15),v.lvl,v.prop)..str
-					else
-						str = ' %s >> Lv.%d %s \n':format(k:rpad(' ', 15),v.lvl,v.prop)..str
-					end
+                    if table.with(jug_pets,'en',k) then
+                        str = ' \\cs(0,255,0)%s\\cs(255,255,255)  >> Lv.%d %s \n':format(k:rpad(' ', 15),v.lvl,v.prop)..str
+                    else
+                        str = ' %s >> Lv.%d %s \n':format(k:rpad(' ', 15),v.lvl,v.prop)..str
+                    end
                 end
             end
         end
@@ -582,20 +582,20 @@ function do_stuff()
     end
     if targ and targ.hpp > 0 and resonating[targ.id] then
         local disp_info = resonating[targ.id].disp_info or ''
-		if settings.ws and not resonating[targ.id].closed and not resonating[targ.id].disp_info then
+        if settings.ws and not resonating[targ.id].closed and not resonating[targ.id].disp_info then
             resonating[targ.id].disp_info,str = display_results(targ.id)
         end
-		if settings.ws and not resonating[targ.id].closed and now-resonating[targ.id].timer < 3 then
-			disp_info = str..' wait %s \n':format(3-(now-resonating[targ.id].timer))..disp_info
-		elseif settings.ws and not resonating[targ.id].closed and now-resonating[targ.id].timer < 10 then
-			disp_info = str..'  GO! %s \n':format(10-(now-resonating[targ.id].timer))..disp_info
-			--for i,v in pairs(colors) do
-			--	disp_info = string.gsub(disp_info, i, v..i..'\\cs(255,255,255)')
-			--end
-		end
-		if settings.ma and resonating[targ.id].step > 1 and now-resonating[targ.id].timer < 8 then
-			disp_info = '%s %s \n':format(burst_results(resonating[targ.id]), 8-(now-resonating[targ.id].timer))..disp_info
-		end
+        if settings.ws and not resonating[targ.id].closed and now-resonating[targ.id].timer < 3 then
+            disp_info = str..' wait %s \n':format(3-(now-resonating[targ.id].timer))..disp_info
+        elseif settings.ws and not resonating[targ.id].closed and now-resonating[targ.id].timer < 10 then
+            disp_info = str..'  GO! %s \n':format(10-(now-resonating[targ.id].timer))..disp_info
+            --for i,v in pairs(colors) do
+            --    disp_info = string.gsub(disp_info, i, v..i..'\\cs(255,255,255)')
+            --end
+        end
+        if settings.ma and resonating[targ.id].step > 1 and now-resonating[targ.id].timer < 8 then
+            disp_info = '%s %s \n':format(burst_results(resonating[targ.id]), 8-(now-resonating[targ.id].timer))..disp_info
+        end
         skill_props:text(disp_info)
         skill_props:show()
     elseif not visible then
@@ -604,12 +604,12 @@ function do_stuff()
 end
 
 function loop()
-	while doloop do
-		do_stuff()
-		coroutine.sleep(0.2)
-	end	
+    while doloop do
+        do_stuff()
+        coroutine.sleep(0.2)
+    end    
 end
-	
+    
 
 windower.register_event('incoming chunk', function(id,original,modified,injected,blocked)
     if id == 0x028 then
@@ -629,7 +629,7 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
             elseif abil and abil.skill == 36 then
                 abil.skillchain_a = elements[abil.element].sc
                 apply_props(packet,abil,'spells')
-			end
+            end
         -- Job Ability
         elseif packet['Category'] == 6 then
             if packet.Param == 93 then
@@ -671,17 +671,17 @@ windower.register_event('addon command', function(...)
         end
         visible = false
    elseif S{'ma','ws','pet'}:contains(commands[1]) then
-		if not commands[2] then
+        if not commands[2] then
             settings[commands[1]] = not settings[commands[1]]
         elseif commands[2] == 'off' then
             settings[commands[1]] = false
         elseif commands[2] == 'on' then
             settings[commands[1]] = true
         end
-        --windower.add_to_chat(207, '%s will %s be displayed.':format(commands[1] == 'ma' and 'Magic' or 'Weapon Skills',settings[commands[1]] and 'now' or 'NOT'))																																								   
-		windower.add_to_chat(207, '%s: %s.':format(commands[1],settings[commands[1]] and 'TRUE' or 'FALSE'))
-	elseif commands[1] == 'save' then
-        config.save(settings, 'all')							
+        --windower.add_to_chat(207, '%s will %s be displayed.':format(commands[1] == 'ma' and 'Magic' or 'Weapon Skills',settings[commands[1]] and 'now' or 'NOT'))                                                                                                                                                                   
+        windower.add_to_chat(207, '%s: %s.':format(commands[1],settings[commands[1]] and 'TRUE' or 'FALSE'))
+    elseif commands[1] == 'save' then
+        config.save(settings, 'all')                            
     elseif commands[1] == 'eval' then
         assert(loadstring(table.concat(commands, ' ',2)))()
     end
@@ -693,10 +693,10 @@ function reset()
 end
 
 windower.register_event('unload', function()
-	doloop = false
+    doloop = false
 end)
 
 windower.register_event('load', function()
-	doloop = true
-	loop()
+    doloop = true
+    loop()
 end)
