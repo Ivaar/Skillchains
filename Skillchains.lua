@@ -557,13 +557,7 @@ function do_stuff()
         skill_props:hide()
     end
 end
-
-function loop()
-    while doloop do
-        do_stuff()
-        coroutine.sleep(0.2)
-    end    
-end
+do_stuff:loop(0.2)
 
 windower.register_event('incoming chunk', function(id,original,modified,injected,blocked)
     if id == 0x028 then
@@ -645,12 +639,3 @@ function reset()
     chain_ability = {azure={},sch={},blu={}}
     resonating = {}
 end
-
-windower.register_event('unload', function()
-    doloop = false
-end)
-
-windower.register_event('load', function()
-    doloop = true
-    loop()
-end)
