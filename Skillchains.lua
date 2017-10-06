@@ -634,8 +634,3 @@ windower.register_event('addon command', function(...)
         assert(loadstring(table.concat(commands, ' ',2)))()
     end
 end)
-
-function reset()
-    chain_ability = {azure={},sch={},blu={}}
-    resonating = {}
-end
