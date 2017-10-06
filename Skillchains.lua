@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar, contributors: Sebyg666, Sammeh,'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.2017.10.04'
+_addon.version = '2.2017.10.05'
 
 texts = require('texts')
 packets = require('packets')
@@ -167,7 +167,7 @@ prop_info = {
     Detonation = {elements='Wind',properties={[1]={['Compression']='Gravitation'},[2]={['Scission']='Compression'}},level=1},
     Impaction = {elements='Lightning',properties={[1]={Liquefaction='Liquefaction'},[2]={Detonation='Detonation'}},level=1},
     }
-
+    
 blood_pacts = L{
     [513] = {id=513,avatar='Carbuncle',en='Poison Nails',skillchain_a='Transfixion'},
     [521] = {id=521,avatar='Cait Sith',en='Regal Scratch',skillchain_a='Scission'},
@@ -311,7 +311,7 @@ npc_move = L{
     [3495] = {id=3495,trust='Zeid',en='Ground Strike',skillchain_a='Fragmentation',skillchain_b='Distortion',skillchain_c=''},
     }
 
-jug_pets = {
+jug_pets = L{
     [3840] = {id=3840,en='Foot Kick',skillchain_a='Reverberation',skillchain_b=''},
     [3842] = {id=3842,en='Whirl Claws',skillchain_a='Impaction',skillchain_b=''},
     [3843] = {id=3843,en='Head Butt',skillchain_a='Detonation',skillchain_b=''},
@@ -359,7 +359,6 @@ jug_pets = {
 }
 
 function apply_props(packet,abil,ability)
-    if not abil then return end
     local mob_id = packet['Target 1 ID']
     local mob = windower.ffxi.get_mob_by_id(mob_id)
     if not mob or not mob.is_npc or mob.hpp == 0 then return end
@@ -376,17 +375,8 @@ function apply_props(packet,abil,ability)
         end
         resonating[mob_id] = {active={skillchain},timer=now,ws=abil,chain=true,closed=closed,step=step}
     elseif L{110,161,162,185,187}:contains(packet['Target 1 Action 1 Message']) then           
-        local aeonic,aftermath_lvl = aeonicinfo()
-        if radiance_ws:contains(abil.en) or umbra_ws:contains(abil.en) then 
-            if aeonic and aftermath_lvl then 
-                abil.skillchain_c = aftermath_props[abil.en].skillchain_c
-                abil.skillchain_b = aftermath_props[abil.en].skillchain_b
-                abil.skillchain_a = aftermath_props[abil.en].skillchain_a
-            else
-                abil.skillchain_c = ''
-                abil.skillchain_b = aftermath_props[abil.en].skillchain_c
-                abil.skillchain_a = aftermath_props[abil.en].skillchain_b
-            end
+        if aeonicinfo() and (radiance_ws:contains(abil.en) or umbra_ws:contains(abil.en)) then 
+            table.update(abil,aftermath_props[abil.en])
         end
         resonating[mob_id] = {active={abil.skillchain_a,abil.skillchain_b,abil.skillchain_c},timer=now,ws=abil,chain=false,step=1}
     elseif L{317}:contains(packet['Target 1 Action 1 Message']) then
@@ -429,76 +419,47 @@ function chain_results(reson)
     local skills,spells,petskills = {},{},{}
     local m_job = windower.ffxi.get_player().main_job
     local abilities = windower.ffxi.get_abilities()
-    local spell_table
-    local aeonic,aftermath_lvl = aeonicinfo()                                          
-    if m_job == 'SMN' then
-        spell_table = blood_pacts
-    elseif m_job == 'BLU' then
-        spell_table = blue_magic
-    elseif m_job == 'BST' then
-        spell_table = jug_pets
-    end
+    local aeonic_am = aeonicinfo()
     for key,element in ipairs(reson.active) do
         local props = prop_info[element].properties
-        for x=1,#props do
-            for k,v in pairs(props[x]) do
-                local lvl = prop_info[v].level
-                if lvl3:contains(v) and lvl3:contains(element) then
-                    lvl = 4
-                end
-                if m_job == 'SCH' and settings.ma then
+        if m_job == 'SCH' and settings.ma then
+            for x=1,#props do
+                for k,v in pairs(props[x]) do
                     for i=0,7 do
                         if elements[i].sc == v then
                             local term = elements[i].mb..' Magic'                        
-                            if not spells[term] or spells[term].lvl < lvl then
-                                spells[term] = {lvl=lvl,prop=v}
+                            if not spells[term] or spells[term].lvl < prop_info[v].level then
+                                spells[term] = {lvl=prop_info[v].level,prop=v}
                             end
-                        end
-                    end
-                elseif spell_table then
-                    for i,t in ipairs(abilities.job_abilities) do
-                        local spell = spell_table[t]
-                        if spell and S{spell.skillchain_a,spell.skillchain_b}:contains(k) then
-                            local term = spell.en
-                            if spell.avatar then term = spell.avatar..': '..term end
-                            if (not spells[term] or spells[term].lvl < lvl) then
-                                spells[term] = {lvl=lvl,prop=v}
-                            end
-                        end
-                    end
-                end
-                
-                if settings.ws then
-                    for i,t in ipairs(abilities.weapon_skills) do
-                    local ws = res.weapon_skills[t]
-                        if (radiance_ws:contains(ws.en) or umbra_ws:contains(ws.en)) and aeonic and aftermath_lvl and reson.step > 0 then
-                            ws.skillchain_c = aftermath_props[ws.en].skillchain_c
-                            ws.skillchain_b = aftermath_props[ws.en].skillchain_b
-                            ws.skillchain_a = aftermath_props[ws.en].skillchain_a
-                        end
-                        if ws and S{ws.skillchain_a,ws.skillchain_b,ws.skillchain_c}:contains(k) and 
-                        (not skills[ws.en] or skills[ws.en].lvl < lvl) then
-                            local new_v = check(ws.skillchain_a,ws.skillchain_b,ws.skillchain_c,props)
-                            skills[ws.en] = {lvl=prop_info[new_v].level,prop=new_v}
-                        end
-                    end
-                end
-
-                if settings.pet and m_job == 'BST' and windower.ffxi.get_mob_by_target('pet') then
-                    for i,t in ipairs(abilities.job_abilities) do
-                        local ability = res.job_abilities:with('id', t)
-                        if ability.type == 'Monster' then
-                            ability = table.with(jug_pets,'en',ability.en)    
-                            if S{ability.skillchain_a,ability.skillchain_b}:contains(k) then
-                                local new_v = check(ability.skillchain_a,ability.skillchain_b,'',props)
-                                petskills[ability.en] = {lvl=prop_info[new_v].level,prop=new_v}
-                            end                            
                         end
                     end
                 end
             end
         end
-    end   
+        if settings.ws then
+            for i,t in ipairs(abilities.weapon_skills) do
+                local ws = res.weapon_skills[t]
+                if aeonic_am and (radiance_ws:contains(ws.en) or umbra_ws:contains(ws.en)) and reson.step > 1 then
+                    ws = table.update(ws, aftermath_props[ws.en])
+                end
+                local prop = check(props,ws.skillchain_a,ws.skillchain_b,ws.skillchain_c)
+                if prop and (not skills[ws.en] or skills[ws.en].lvl < prop_info[prop].level) then 
+                    skills[ws.en] = {lvl=prop_info[prop].level,prop=prop}
+                end
+            end
+        end
+        if settings.pet and windower.ffxi.get_mob_by_target('pet') then
+            for i,t in ipairs(abilities.job_abilities) do
+                local ability = m_job == 'BST' and table.with(jug_pets,'en',res.job_abilities[t].en) or blood_pacts[t]
+                if ability then
+                    local prop = check(props,ability.skillchain_a,ability.skillchain_b,'')
+                    if prop and (not skills[ability.en] or skills[ability.en].lvl < prop_info[prop].level) then 
+                        petskills[ability.en] = {lvl=prop_info[prop].level,prop=prop}
+                    end
+                end
+            end
+        end
+    end
     return {[1]=skills,[2]=spells,[3]=petskills}
 end
 
@@ -507,9 +468,8 @@ function aeonicinfo()
     local buffs = windower.ffxi.get_player().buffs
     local equip = windower.ffxi.get_items().equipment
     local mainweapon = res.items[windower.ffxi.get_items(equip.main_bag, equip.main).id].en
-    local aftermath_lvl = nil
-    local aeonic_found = nil
-    
+    local aftermath_lvl
+    if not aeonic_weapons:contains(mainweapon) then return end
     for i,v in ipairs(buffs) do
         if v == 272 then
             aftermath_lvl = 3
@@ -519,15 +479,10 @@ function aeonicinfo()
             aftermath_lvl = 1
         end
     end
-    
-    if aeonic_weapons:contains(mainweapon) then 
-        aeonic_found = true
-    end
-    
-    return aeonic_found,aftermath_lvl
+    return aftermath_lvl
 end
 
-function check(ws_ele_a,ws_ele_b,ws_ele_c,props)
+function check(props,ws_ele_a,ws_ele_b,ws_ele_c)
     --table.vprint(props)
     for x=1,#props do
         for k,v in pairs(props[x]) do
@@ -609,7 +564,6 @@ function loop()
         coroutine.sleep(0.2)
     end    
 end
-    
 
 windower.register_event('incoming chunk', function(id,original,modified,injected,blocked)
     if id == 0x028 then
@@ -669,7 +623,7 @@ windower.register_event('addon command', function(...)
             skill_props:show()
             return
         end
-        visible = false
+        visible = false     
    elseif S{'ma','ws','pet'}:contains(commands[1]) then
         if not commands[2] then
             settings[commands[1]] = not settings[commands[1]]
