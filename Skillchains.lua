@@ -26,11 +26,11 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ]]
 
-
 _addon.author = 'Ivaar, contributors: Sebyg666, Sammeh,'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.2017.10.05'
+_addon.version = '2.0.1'
+_addon.updated = '2017.10.10'
 
 texts = require('texts')
 packets = require('packets')
@@ -41,42 +41,35 @@ require('strings')
 require('logger')
 
 default = {
-    ws=true,
-    ma=true,
-    pet=true,                                            
-    display = {
-        text={size=12,font='Consolas'},
-        pos={x=0,y=0},
-        },
+    show = {skills=true,immanence=true,pet=true,burst=true,properties=true,timer=true,step=true,aeonic=false},
+    display = {text={size=12,font='Consolas'},pos={x=0,y=0},},
+    burst_display = {text={size=12,font='Consolas'},pos={x=0,y=0},},
     }
   
 settings = config.load(default)
 skill_props = texts.new('',settings.display,settings)
+magic_bursts = texts.new('',settings.burst_display,settings)
 
 chain_ability = {azure={},sch={},blu={}}
 resonating = {}
 
-lvl3 = S{'Darkness','Light'}
-lvl4 = S{'Radiance','Umbra'}
-radiance_ws = S{'Blade: Shun','Apex Arrow','Last Stand','Exenterator','Realmrazor','Resolution','Shijin Spiral','Tachi: Shoha','Upheaval'}
-umbra_ws = S{'Shattersoul','Entropy','Requiescat','Ruinator','Stardiver'}
 aeonic_weapons = S{'Heishi Shorinken','Godhands','Aeneas','Sequence','Lionheart','Tri-edge','Chango','Anguta','Trishula','Dojikiri Yasutsuna','Tishtrya','Khatvanga','Fail-Not','Fomalhaut'}
 
 aftermath_props = T{
-    ['Blade: Shun'] = {skillchain_a="Light",skillchain_b="Fusion",skillchain_c="Impaction"}, 
-    ['Apex Arrow'] = {skillchain_a="Light",skillchain_b="Fragmentation",skillchain_c="Transfixion"}, 
-    ['Last Stand'] = {skillchain_a="Light",skillchain_b="Fusion",skillchain_c="Reverberation"}, 
-    ['Exenterator'] = {skillchain_a="Light",skillchain_b="Fragmentation",skillchain_c="Scission"}, 
-    ['Realmrazor'] = {skillchain_a="Light",skillchain_b="Fusion",skillchain_c="Impaction"}, 
-    ['Resolution'] = {skillchain_a="Light",skillchain_b="Fragmentation",skillchain_c="Scission"}, 
-    ['Shijin Spiral'] = {skillchain_a="Light",skillchain_b="Fusion",skillchain_c="Reverberation"}, 
-    ['Tachi: Shoha'] = {skillchain_a="Light",skillchain_b="Fragmentation",skillchain_c="Compression"}, 
-    ['Upheaval'] = {skillchain_a="Light",skillchain_b="Fusion",skillchain_c="Compression"}, 
-    ['Shattersoul'] = {skillchain_a="Darkness",skillchain_b="Gravitation",skillchain_c="Induration"}, 
-    ['Entropy'] = {skillchain_a="Darkness",skillchain_b="Gravitation",skillchain_c="Reverberation"}, 
-    ['Requiescat'] = {skillchain_a="Darkness",skillchain_b="Gravitation",skillchain_c="Scission"}, 
-    ['Ruinator'] = {skillchain_a="Darkness",skillchain_b="Distortion",skillchain_c="Detonation"}, 
-    ['Stardiver'] = {skillchain_a="Darkness",skillchain_b="Gravitation",skillchain_c="Transfixion"}, 
+    ['Blade: Shun'] = {skillchain_a='Light',skillchain_b='Fusion',skillchain_c='Impaction'}, 
+    ['Apex Arrow'] = {skillchain_a='Light',skillchain_b='Fragmentation',skillchain_c='Transfixion'}, 
+    ['Last Stand'] = {skillchain_a='Light',skillchain_b='Fusion',skillchain_c='Reverberation'}, 
+    ['Exenterator'] = {skillchain_a='Light',skillchain_b='Fragmentation',skillchain_c='Scission'}, 
+    ['Realmrazor'] = {skillchain_a='Light',skillchain_b='Fusion',skillchain_c='Impaction'}, 
+    ['Resolution'] = {skillchain_a='Light',skillchain_b='Fragmentation',skillchain_c='Scission'}, 
+    ['Shijin Spiral'] = {skillchain_a='Light',skillchain_b='Fusion',skillchain_c='Reverberation'}, 
+    ['Tachi: Shoha'] = {skillchain_a='Light',skillchain_b='Fragmentation',skillchain_c='Compression'}, 
+    ['Upheaval'] = {skillchain_a='Light',skillchain_b='Fusion',skillchain_c='Compression'}, 
+    ['Shattersoul'] = {skillchain_a='Darkness',skillchain_b='Gravitation',skillchain_c='Induration'}, 
+    ['Entropy'] = {skillchain_a='Darkness',skillchain_b='Gravitation',skillchain_c='Reverberation'}, 
+    ['Requiescat'] = {skillchain_a='Darkness',skillchain_b='Gravitation',skillchain_c='Scission'}, 
+    ['Ruinator'] = {skillchain_a='Darkness',skillchain_b='Distortion',skillchain_c='Detonation'}, 
+    ['Stardiver'] = {skillchain_a='Darkness',skillchain_b='Gravitation',skillchain_c='Transfixion'}, 
     }
 
 skillchains = L{
@@ -150,22 +143,22 @@ elements = L{
     }
 
 prop_info = {
-    Radiance = {elements='Fire Wind Lightning Light',properties={[1]={Light='Light'}},level=3},
-    Umbra = {elements='Earth Ice Water Darkness',properties={[1]={Darkness='Darkness'}},level=3},
-    Light = {elements='Fire Wind Lightning Light',properties={[1]={Light='Light'}},level=3},
-    Darkness = {elements='Earth Ice Water Darkness',properties={[1]={Darkness='Darkness'}},level=3},
-    Gravitation = {elements='Earth Darkness',properties={[1]={Distortion='Darkness'},[2]={Fragmentation='Fragmentation'}},level=2},
-    Fragmentation = {elements='Wind Lightning',properties={[1]={Fusion='Light'},[2]={Distortion='Distortion'}},level=2},
-    Distortion = {elements='Ice Water',properties={[1]={Gravitation='Darkness'},[2]={Fusion='Fusion'}},level=2},
-    Fusion = {elements='Fire Light',properties={[1]={Fragmentation='Light'},[2]={Gravitation='Gravitation'}},level=2},
-    Compression = {elements='Darkness',properties={[1]={Transfixion='Transfixion'},[2]={Detonation='Detonation'}},level=1},
-    Liquefaction = {elements='Fire',properties={[1]={Impaction='Fusion'},[2]={Scission='Scission'}},level=1},
-    Induration = {elements='Ice',properties={[1]={Reverberation='Fragmentation'},[2]={Compression='Compression'},[3]={Impaction='Impaction'}},level=1},
-    Reverberation = {elements='Water',properties={[1]={Induration='Induration'},[2]={Impaction='Impaction'}},level=1},
-    Transfixion = {elements='Light',properties={[1]={Scission='Distortion'},[2]={Reverberation='Reverberation'},[3]={Compression='Compression'}},level=1},
-    Scission = {elements='Earth',properties={[1]={Liquefaction='Liquefaction'},[2]={Reverberation='Reverberation'},[3]={Detonation='Detonation'}},level=1},
-    Detonation = {elements='Wind',properties={[1]={['Compression']='Gravitation'},[2]={['Scission']='Compression'}},level=1},
-    Impaction = {elements='Lightning',properties={[1]={Liquefaction='Liquefaction'},[2]={Detonation='Detonation'}},level=1},
+    Radiance = {elements='Fire Wind Lightning Light',props={Light='Light'},level=3},
+    Umbra = {elements='Earth Ice Water Darkness',props={Darkness='Darkness'},level=3},
+    Light = {elements='Fire Wind Lightning Light',props={Light='Light'},level=3},
+    Darkness = {elements='Earth Ice Water Darkness',props={Darkness='Darkness'},level=3},
+    Gravitation = {elements='Earth Darkness',props={Distortion='Darkness',Fragmentation='Fragmentation'},level=2},
+    Fragmentation = {elements='Wind Lightning',props={Fusion='Light',Distortion='Distortion'},level=2},
+    Distortion = {elements='Ice Water',props={Gravitation='Darkness',Fusion='Fusion'},level=2},
+    Fusion = {elements='Fire Light',props={Fragmentation='Light',Gravitation='Gravitation'},level=2},
+    Compression = {elements='Darkness',props={Transfixion='Transfixion',Detonation='Detonation'},level=1},
+    Liquefaction = {elements='Fire',props={Impaction='Fusion',Scission='Scission'},level=1},
+    Induration = {elements='Ice',props={Reverberation='Fragmentation',Compression='Compression',Impaction='Impaction'},level=1},
+    Reverberation = {elements='Water',props={Induration='Induration',Impaction='Impaction'},level=1},
+    Transfixion = {elements='Light',props={Scission='Distortion',Reverberation='Reverberation',Compression='Compression'},level=1},
+    Scission = {elements='Earth',props={Liquefaction='Liquefaction',Reverberation='Reverberation',Detonation='Detonation'},level=1},
+    Detonation = {elements='Wind',props={Compression='Gravitation',Scission='Scission'},level=1},
+    Impaction = {elements='Lightning',props={Liquefaction='Liquefaction',Detonation='Detonation'},level=1},
     }
     
 blood_pacts = L{
@@ -194,11 +187,11 @@ blood_pacts = L{
     [614] = {id=614,avatar='Shiva',en='Rush',skillchain_a='Distortion',skillchain_b='Scission'},
     [624] = {id=624,avatar='Ramuh',en='Shock Strike',skillchain_a='Impaction'}, 
     [630] = {id=630,avatar='Ramuh',en='Chaotic Strike',skillchain_a='Fragmentation',skillchain_b='Transfixion'},
-    [634] = {id=634,avatar='Ramuh',en="Volt Strike",skillchain_a='Fragmentation',skillchain_b='Scission'},
+    [634] = {id=634,avatar='Ramuh',en='Volt Strike',skillchain_a='Fragmentation',skillchain_b='Scission'},
     [656] = {id=656,avatar='Diabolos',en='Camisado',skillchain_a='Compression'},
     [667] = {id=667,avatar='Diabolos',en='Blindside',skillchain_a='Gravitation',skillchain_b='Transfixion'},
     }
-    
+
 blue_magic = L{
     [519] = {id=519,en='Screwdriver',skillchain_a='Transfixion',skillchain_b='Scission'},
     [529] = {id=529,en='Bludgeon',skillchain_a='Liquefaction',skillchain_b=''},
@@ -251,11 +244,11 @@ blue_magic = L{
     [697] = {id=697,en='Amorphic Spikes',skillchain_a='Gravitation',skillchain_b=''},
     [699] = {id=699,en='Barbed Crescent',skillchain_a='Distortion',skillchain_b='Liquefaction'},
     [709] = {id=709,en='Thrashing Assault',skillchain_a='Fusion',skillchain_b=''},
-    [740] = {id=740,en="Tourbillion",skillchain_a='Light',skillchain_b='Fragmentation'},
+    [740] = {id=740,en='Tourbillion',skillchain_a='Light',skillchain_b='Fragmentation'},
     [743] = {id=743,en='Bloodrake',skillchain_a='Darkness',skillchain_b='Gravitation'},
     } 
 
-npc_move = L{
+monster_abilities = L{
     -- Automaton
     [1940] = {id=1940,en='Chimera Ripper',skillchain_a='Detonation',skillchain_b='Induration'},
     [1941] = {id=1941,en='String Clipper',skillchain_a='Scission',skillchain_b='Scission'},
@@ -269,26 +262,26 @@ npc_move = L{
     [2743] = {id=2743,en='String Shredder',skillchain_a='Distortion',skillchain_b='Scission'},
     [2744] = {id=2744,en='Armor Shatterer',skillchain_a='Fusion',skillchain_b='Impaction'},
     -- Trusts
-    --[3195] = {id=3195,trust='Zeid',en="Abyssal Drain",skillchain_a='',skillchain_b='',skillchain_c=''},
-    --[3196] = {id=3196,trust='Zeid',en="Abyssal Strike",skillchain_a='',skillchain_b='',skillchain_c=''},
+    --[3195] = {id=3195,trust='Zeid',en='Abyssal Drain',skillchain_a='',skillchain_b='',skillchain_c=''},
+    --[3196] = {id=3196,trust='Zeid',en='Abyssal Strike',skillchain_a='',skillchain_b='',skillchain_c=''},
     -- assumed magical [3203] = {id=3203,trust='MihliAliapoh',en='Scouring Bubbles',skillchain_a='',skillchain_b='',skillchain_c=''},
     [3204] = {id=3204,trust='Tenzen',en='Amatsu: Tsukikage',skillchain_a='Fragmentation',skillchain_b='Detonation',skillchain_c=''},
-    [3215] = {id=3215,trust='NajaSalaheem',en="Peacebreaker",skillchain_a='Fragmentation',skillchain_b='',skillchain_c=''},
-    --[3224] = {id=3224,trust='',en="Hemorrhaze",skillchain_a='',skillchain_b='',skillchain_c=''},
+    [3215] = {id=3215,trust='NajaSalaheem',en='Peacebreaker',skillchain_a='Fragmentation',skillchain_b='',skillchain_c=''},
+    --[3224] = {id=3224,trust='',en='Hemorrhaze',skillchain_a='',skillchain_b='',skillchain_c=''},
     [3231] = {id=3231,trust='LehkoHabhoka',en='Debonair Rush',skillchain_a='Detonation',skillchain_b='',skillchain_c=''},
     --[3232] = {id=3232,trust='LehkoHabhoka',en='Iridal Pierce',skillchain_a='',skillchain_b='',skillchain_c=''},
     --[3233] = {id=3233,trust='LehkoHabhoka',en='Lunar Revolution',skillchain_a='',skillchain_b='',skillchain_c=''},
-    [3234] = {id=3234,trust='Prishe',en="Nullifying Dropkick",skillchain_a='Induration',skillchain_b='',skillchain_c=''},
-    [3235] = {id=3235,trust='Prishe',en="Auroral Uppercut",skillchain_a='Fragmentation',skillchain_b='',skillchain_c=''},
-    [3236] = {id=3236,trust='Prishe',en="Knuckle Sandwich",skillchain_a='Fusion',skillchain_b='',skillchain_c=''},
-    --[3238] = {id=3238,trust='Gadalar',en="Salamander Flame",skillchain_a='',skillchain_b='',skillchain_c=''},
+    [3234] = {id=3234,trust='Prishe',en='Nullifying Dropkick',skillchain_a='Induration',skillchain_b='',skillchain_c=''},
+    [3235] = {id=3235,trust='Prishe',en='Auroral Uppercut',skillchain_a='Fragmentation',skillchain_b='',skillchain_c=''},
+    [3236] = {id=3236,trust='Prishe',en='Knuckle Sandwich',skillchain_a='Fusion',skillchain_b='',skillchain_c=''},
+    --[3238] = {id=3238,trust='Gadalar',en='Salamander Flame',skillchain_a='',skillchain_b='',skillchain_c=''},
     --[3239] = {id=3239,trust='Najelith',en='Typhonic Arrow',skillchain_a='',skillchain_b='',skillchain_c=''},
     [3240] = {id=3240,trust='Zarag',en='Meteoric Impact',skillchain_a='Fragmentation',skillchain_b='',skillchain_c=''},
     [3243] = {id=3243,trust='Nashmeira',en='Imperial Authority',skillchain_a='Fragmentation',skillchain_b='',skillchain_c=''},
-    [3252] = {id=3252,trust='Luzaf',en="Bisection",skillchain_a='Fragmentation',skillchain_b='Scission'},
+    [3252] = {id=3252,trust='Luzaf',en='Bisection',skillchain_a='Fragmentation',skillchain_b='Scission'},
     [3253] = {id=3253,trust='Luzaf',en='Leaden Salute',skillchain_a='Gravitation',skillchain_b='Transfixion',skillchain_c=''},
     [3254] = {id=3254,trust='Luzaf',en='Akimbo Shot',skillchain_a='Reverberation',skillchain_b='Detonation',skillchain_c=''},
-    [3255] = {id=3255,trust='Luzaf',en="Grisly Horizon",skillchain_a='Gravitation',skillchain_b='',skillchain_c=''},
+    [3255] = {id=3255,trust='Luzaf',en='Grisly Horizon',skillchain_a='Gravitation',skillchain_b='',skillchain_c=''},
     [3337] = {id=3337,trust='Karaha-Baruha',en='Lunar Bay',skillchain_a='Gravitation',skillchain_b='',skillchain_c=''},
     --[3355] = {id=3355,trust='Abenzio',en='Blow',skillchain_a='',skillchain_b='',skillchain_c=''},
     --[3356] = {id=3356,trust='Abenzio',en='Uppercut',skillchain_a='',skillchain_b='',skillchain_c=''},
@@ -309,9 +302,6 @@ npc_move = L{
     [3493] = {id=3493,trust='Lion',en='Powder Keg',skillchain_a='Fusion',skillchain_b='Compression',skillchain_c=''},
     [3494] = {id=3494,trust='Lion',en='Walk the Plank',skillchain_a='Light',skillchain_b='Distortion',skillchain_c=''},
     [3495] = {id=3495,trust='Zeid',en='Ground Strike',skillchain_a='Fragmentation',skillchain_b='Distortion',skillchain_c=''},
-    }
-
-jug_pets = L{
     [3840] = {id=3840,en='Foot Kick',skillchain_a='Reverberation',skillchain_b=''},
     [3842] = {id=3842,en='Whirl Claws',skillchain_a='Impaction',skillchain_b=''},
     [3843] = {id=3843,en='Head Butt',skillchain_a='Detonation',skillchain_b=''},
@@ -356,9 +346,10 @@ jug_pets = L{
     [3938] = {id=3938,en='Somersault',skillchain_a='Compression',skillchain_b=''},
     [3941] = {id=3941,en='Pecking Flurry',skillchain_a='Transfixion',skillchain_b=''},
     [3942] = {id=3942,en='Sickle Slash',skillchain_a='Transfixion',skillchain_b=''},
-}
+    }
 
-function apply_props(packet,abil,ability)
+function apply_props(packet,ability)
+    if not ability or not ability.skillchain_a or ability.skillchain_a == '' then return end
     local mob_id = packet['Target 1 ID']
     local mob = windower.ffxi.get_mob_by_id(mob_id)
     if not mob or not mob.is_npc or mob.hpp == 0 then return end
@@ -367,34 +358,30 @@ function apply_props(packet,abil,ability)
     if skillchain then
         local reson = resonating[mob_id]
         local step = (reson and reson.step or 1) + 1
-        local closed
-        if (lvl3:contains(skillchain) and reson and not reson.closed and reson.active[1] == skillchain and
-        (reson.chain or reson.ws.skillchain_a == abil.skillchain_a)) or
-            lvl4:contains(skillchain) or resonating[mob_id].step == 6 then
-            closed = true
-        end
-        resonating[mob_id] = {active={skillchain},timer=now,ws=abil,chain=true,closed=closed,step=step}
+        local closed = reson and (check_lvl(reson.active[1],ability.skillchain_a) == 4 or reson.step == 6)
+        resonating[mob_id] = {active={skillchain},timer=now,ability=ability,chain=true,closed=closed,step=step}
     elseif L{110,161,162,185,187}:contains(packet['Target 1 Action 1 Message']) then           
-        if aeonicinfo() and (radiance_ws:contains(abil.en) or umbra_ws:contains(abil.en)) then 
-            table.update(abil,aftermath_props[abil.en])
+        if settings.show.aeonic and aftermath_props[ability.en] and aeonicinfo() then
+            table.update(ability,aftermath_props[ability.en])
         end
-        resonating[mob_id] = {active={abil.skillchain_a,abil.skillchain_b,abil.skillchain_c},timer=now,ws=abil,chain=false,step=1}
+        resonating[mob_id] = {active={ability.skillchain_a,ability.skillchain_b,ability.skillchain_c},timer=now,ability=ability,chain=false,step=1}
     elseif L{317}:contains(packet['Target 1 Action 1 Message']) then
-        resonating[mob_id] = {active={abil.skillchain_a},timer=now,ws=abil,chain=false,step=1}
-    elseif ability == 'spells' and chain_ability.sch[packet.Actor] then
-        resonating[mob_id] = {active={active},timer=now,ws=abil,chain=false,step=1}
+        resonating[mob_id] = {active={ability.skillchain_a},timer=now,ability=ability,chain=false,step=1}
+    elseif ability.skill == 36 and chain_ability.sch[packet.Actor] then
+        resonating[mob_id] = {active={ability.skillchain_a},timer=now,ability=ability,chain=false,step=1}
         chain_ability.sch[packet.Actor] = nil
-    elseif ability == 'blue_magic' and packet['Target 1 Action 1 Message'] == 2 and 
+    elseif ability.skill == 43 and packet['Target 1 Action 1 Message'] == 2 and 
     (chain_ability.azure[packet.Actor] or chain_ability.blu[packet.Actor]) then
-        resonating[mob_id] = {active={abil.skillchain_a,abil.skillchain_b},timer=now,ws=abil,chain=false,step=1}
+        resonating[mob_id] = {active={ability.skillchain_a,ability.skillchain_b},timer=now,ability=ability,chain=false,step=1}
         chain_ability.blu[packet.Actor] = nil
     end
-    
+
     if not resonating[mob_id] then return end
-    
+
     for k,element in ipairs(resonating[mob_id].active) do
         if element == '' then resonating[mob_id].active[k] = nil end
     end
+    do_stuff()
 end
 
 function delete_timer(dur,...)
@@ -406,129 +393,99 @@ function delete_timer(dur,...)
     end(...), dur)
 end
 
-function burst_results(reson)
-    local str = ''
-    for k,element in ipairs(reson.active) do
-        --stra = stra..' [%s]':format(element)
-        str = str..' (Burst: %s)':format(prop_info[element].elements)
-    end
-    return str
-end
-
-function chain_results(reson)
-    local skills,spells,petskills = {},{},{}
+function chain_results(active)
+    local skills,spells,petskills,bluemagic = {},{},{},{}
     local m_job = windower.ffxi.get_player().main_job
     local abilities = windower.ffxi.get_abilities()
-    local aeonic_am = aeonicinfo()
-    for key,element in ipairs(reson.active) do
-        local props = prop_info[element].properties
-        if m_job == 'SCH' and settings.ma then
-            for x=1,#props do
-                for k,v in pairs(props[x]) do
-                    for i=0,7 do
-                        if elements[i].sc == v then
-                            local term = elements[i].mb..' Magic'                        
-                            if not spells[term] or spells[term].lvl < prop_info[v].level then
-                                spells[term] = {lvl=prop_info[v].level,prop=v}
-                            end
-                        end
-                    end
-                end
-            end
-        end
-        if settings.ws then
-            for i,t in ipairs(abilities.weapon_skills) do
-                local ws = res.weapon_skills[t]
-                if aeonic_am and (radiance_ws:contains(ws.en) or umbra_ws:contains(ws.en)) and reson.step > 1 then
-                    ws = table.update(ws, aftermath_props[ws.en])
-                end
-                local prop = check(props,ws.skillchain_a,ws.skillchain_b,ws.skillchain_c)
-                if prop and (not skills[ws.en] or skills[ws.en].lvl < prop_info[prop].level) then 
-                    skills[ws.en] = {lvl=prop_info[prop].level,prop=prop}
-                end
-            end
-        end
-        if settings.pet and windower.ffxi.get_mob_by_target('pet') then
-            for i,t in ipairs(abilities.job_abilities) do
-                local ability = m_job == 'BST' and table.with(jug_pets,'en',res.job_abilities[t].en) or blood_pacts[t]
-                if ability then
-                    local prop = check(props,ability.skillchain_a,ability.skillchain_b,'')
-                    if prop and (not skills[ability.en] or skills[ability.en].lvl < prop_info[prop].level) then 
-                        petskills[ability.en] = {lvl=prop_info[prop].level,prop=prop}
-                    end
-                end
+    if settings.show.immanence and m_job == 'SCH' then
+        for i=0,7 do
+            local prop = check_props(active,elements[i].sc,'','')
+            if prop then
+                local term = elements[i].mb..' Magic'
+                spells[term] = {lvl=check_lvl(active[1],prop),prop=prop}
             end
         end
     end
-    return {[1]=skills,[2]=spells,[3]=petskills}
+    if settings.show.weapon then
+        for i,t in ipairs(abilities.weapon_skills) do
+            local ability = res.weapon_skills[t]
+            if settings.show.aeonic and aftermath_props[ability.en] and aeonicinfo() then
+                ability = table.update(ability, aftermath_props[ability.en])
+            end
+            local prop = check_props(active,ability.skillchain_a,ability.skillchain_b,ability.skillchain_c)
+            if prop then
+                skills[ability.en] = {lvl=check_lvl(active[1],prop),prop=prop}
+            end
+        end
+    end
+    if settings.show.pet and windower.ffxi.get_mob_by_target('pet') then
+        for i,t in ipairs(abilities.job_abilities) do
+            local ability = blood_pacts[t] or table.with(monster_abilities,'en',res.job_abilities[t].en)
+            local prop = ability and check_props(active,ability.skillchain_a,ability.skillchain_b,'')
+            if prop then 
+                petskills[ability.en] = {lvl=check_lvl(active[1],prop),prop=prop}
+            end
+        end
+    end
+    if settings.show.blu and m_job == 'BLU' then
+        for i,t in ipairs(windower.ffxi.get_mjob_data().spells) do
+            local ability = blue_magic[t]
+            local prop = ability and check_props(active,ability.skillchain_a,ability.skillchain_b,'')
+            if prop then 
+                bluemagic[ability.en] = {lvl=check_lvl(active[1],prop),prop=prop}
+            end
+        end
+    end
+    return {[1]=skills,[2]=spells,[3]=petskills,[4]=bluemagic}
 end
 
 function aeonicinfo()
-    
     local buffs = windower.ffxi.get_player().buffs
     local equip = windower.ffxi.get_items().equipment
     local mainweapon = res.items[windower.ffxi.get_items(equip.main_bag, equip.main).id].en
-    local aftermath_lvl
-    if not aeonic_weapons:contains(mainweapon) then return end
+    if not aeonic_weapons[mainweapon] then return end
     for i,v in ipairs(buffs) do
         if v == 272 then
-            aftermath_lvl = 3
+            return 3
         elseif v == 271 then
-            aftermath_lvl = 2
+            return 2
         elseif v == 270 then
-            aftermath_lvl = 1
+            return 1
         end
     end
-    return aftermath_lvl
 end
 
-function check(props,ws_ele_a,ws_ele_b,ws_ele_c)
-    --table.vprint(props)
-    for x=1,#props do
-        for k,v in pairs(props[x]) do
-            if k == ws_ele_a then
-                return v
-            end
-        end
+function check_lvl(active,ele_a)
+    if prop_info[ele_a].level == 3 and active == ele_a then
+        return 4
+    else 
+        return prop_info[ele_a].level
     end
-    for x=1,#props do
-        for k,v in pairs(props[x]) do
-            if k == ws_ele_b then
-                return v
-            end
-        end
-    end
-    for x=1,#props do
-        for k,v in pairs(props[x]) do
-            if k == ws_ele_c then
-                return v
-            end
-        end
-    end
-
 end
 
-function display_results(targ)
-    local str = ''
-    local results = chain_results(resonating[targ])
-    for x = 1,4 do
-        for i,t in ipairs(results) do
-            for k,v in pairs(t) do
-                if v and v.lvl == x then
-                    if table.with(jug_pets,'en',k) then
-                        str = ' \\cs(0,255,0)%s\\cs(255,255,255)  >> Lv.%d %s \n':format(k:rpad(' ', 15),v.lvl,v.prop)..str
-                    else
-                        str = ' %s >> Lv.%d %s \n':format(k:rpad(' ', 15),v.lvl,v.prop)..str
-                    end
-                end
+function check_props(active,ele_a,ele_b,ele_c)
+    for key,element in ipairs(active) do
+        local props = prop_info[element].props
+        for k,v in pairs(props) do
+            if k == ele_a then
+                return v
+            end
+        end
+        for k,v in pairs(props) do
+            if k == ele_b then
+                return v
+            end
+        end
+        for k,v in pairs(props) do
+            if k == ele_c then
+                return v
             end
         end
     end
-    return str,' Step: %d >> [%s] >> ':format(resonating[targ].step,resonating[targ].ws.en)
 end
 
 function do_stuff()
-    local targ = windower.ffxi.get_mob_by_target('t')
+    local targ = windower.ffxi.get_mob_by_target('t','bt')
     local now = os.time()
     for k,v in pairs(resonating) do
         if v.timer and now-v.timer >= 10 then
@@ -536,25 +493,51 @@ function do_stuff()
         end
     end
     if targ and targ.hpp > 0 and resonating[targ.id] then
-        local disp_info = resonating[targ.id].disp_info or ''
-        if settings.ws and not resonating[targ.id].closed and not resonating[targ.id].disp_info then
-            resonating[targ.id].disp_info,str = display_results(targ.id)
+        local disp_info = ''
+        if not resonating[targ.id].closed then
+            local results = chain_results(resonating[targ.id].active)
+            for x = 1,4 do
+                for i,t in ipairs(results) do
+                    for k,v in pairs(t) do
+                        if v and v.lvl == x then
+                            if i == 3 then
+                                disp_info = ' \\cs(0,255,0)%s\\cs(255,255,255) >> Lv.%d %s \n':format(k:rpad(' ', 15),v.lvl,v.prop)..disp_info
+                            else
+                                disp_info = ' %s >> Lv.%d %s \n':format(k:rpad(' ', 15),v.lvl,v.prop)..disp_info
+                            end
+                        end
+                    end
+                end
+            end
         end
-        if settings.ws and not resonating[targ.id].closed and now-resonating[targ.id].timer < 3 then
-            disp_info = str..' wait %s \n':format(3-(now-resonating[targ.id].timer))..disp_info
-        elseif settings.ws and not resonating[targ.id].closed and now-resonating[targ.id].timer < 10 then
-            disp_info = str..'  GO! %s \n':format(10-(now-resonating[targ.id].timer))..disp_info
+        if settings.show.properties and not resonating[targ.id].closed then
+            disp_info = '\n'..disp_info
+            for k,element in ipairs(resonating[targ.id].active) do
+                disp_info = ' [%s]':format(element)..disp_info
+            end
+        end
+        if settings.show.timer and not resonating[targ.id].closed and now-resonating[targ.id].timer < 3 then
+            disp_info = ' wait %s \n':format(3-(now-resonating[targ.id].timer))..disp_info
+        elseif settings.show.timer and not resonating[targ.id].closed and now-resonating[targ.id].timer < 10 then
+            disp_info = '  GO! %s \n':format(10-(now-resonating[targ.id].timer))..disp_info
             --for i,v in pairs(colors) do
             --    disp_info = string.gsub(disp_info, i, v..i..'\\cs(255,255,255)')
             --end
         end
-        if settings.ma and resonating[targ.id].step > 1 and now-resonating[targ.id].timer < 8 then
-            disp_info = '%s %s \n':format(burst_results(resonating[targ.id]), 8-(now-resonating[targ.id].timer))..disp_info
+        if settings.show.step and not resonating[targ.id].closed then
+            disp_info = ' Step: %d >> [%s] >> ':format(resonating[targ.id].step,resonating[targ.id].ability.en)..disp_info
+        end
+        if settings.show.burst and resonating[targ.id].step > 1 and now-resonating[targ.id].timer < 8 then
+            magic_bursts:text(' Burst:(%s) %s ':format(prop_info[resonating[targ.id].active[1]].elements, 8-(now-resonating[targ.id].timer)))
+            magic_bursts:show()
+        else
+            magic_bursts:hide()
         end
         skill_props:text(disp_info)
         skill_props:show()
     elseif not visible then
         skill_props:hide()
+        magic_bursts:hide()
     end
 end
 do_stuff:loop(0.2)
@@ -563,23 +546,20 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
     if id == 0x028 then
         local packet = packets.parse('incoming', original)
         -- Weapon Skill finish
-        if packet['Category'] == 3 then
-            local abil = res.weapon_skills[packet.Param]
-            if abil and abil.skillchain_a and abil.skillchain_a ~= '' then
-                apply_props(packet,abil,'weapon_skills')
-            end
+        if packet.Category == 3 then
+            local ability = res.weapon_skills[packet.Param]
+            apply_props(packet,ability)
         -- Casting finish
-        elseif packet['Category'] == 4 and packet['Target 1 Action 1 Message'] ~= 252 then
-            local abil = res.spells[packet.Param]
-            if abil and abil.skill == 43 then
-                abil = blue_magic[packet.Param]
-                apply_props(packet,abil,'blue_magic')
-            elseif abil and abil.skill == 36 then
-                abil.skillchain_a = elements[abil.element].sc
-                apply_props(packet,abil,'spells')
+        elseif packet.Category == 4 and packet['Target 1 Action 1 Message'] ~= 252 then
+            local ability = res.spells[packet.Param]
+            if ability and ability.skill == 43 then
+                ability = blue_magic[packet.Param]
+            elseif ability and ability.skill == 36 then
+                ability.skillchain_a = elements[ability.element].sc
             end
+            apply_props(packet,ability)
         -- Job Ability
-        elseif packet['Category'] == 6 then
+        elseif packet.Category == 6 then
             if packet.Param == 93 then
                 chain_ability.azure[packet.Actor] = true
                 delete_timer(40,'azure',packet.Actor)
@@ -592,42 +572,38 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
             --elseif packet.Param == 320 then
             end
         -- NPC TP finish
-        elseif packet['Category'] == 11 then
-            local abil = npc_move[packet.Param] and npc_move[packet.Param] or jug_pets[packet.Param]
-            if abil then
-                apply_props(packet,abil,'monster_abilities')
-            end
+        elseif packet.Category == 11 then
+            local ability = monster_abilities[packet.Param]
+            apply_props(packet,ability)
         -- Avatar TP finish
-        elseif packet['Category'] == 13 then
-            local abil = blood_pacts[packet.Param]
-            if abil then
-                apply_props(packet,abil,'job_abilities')
-            end
+        elseif packet.Category == 13 then
+            local ability = blood_pacts[packet.Param]
+            apply_props(packet,ability)
         end
     end
 end)
-
+    
 windower.register_event('addon command', function(...)
     local commands = {...}
     for x=1,#commands do commands[x] = commands[x]:lower() end
     if commands[1] == 'move' then
         visible = true
         if not skill_props:visible() then
-            skill_props:text('\n    --- SkillChains ---\n\n  Click and drag to move display.  \n\n\t')
+            skill_props:text('\n    --- SkillChains ---\n\n Click and drag to move display. \n\n\t')
+            magic_bursts:text(' ----- Magic Burst ----- ')
+            magic_bursts:show()
             skill_props:show()
             return
         end
-        visible = false     
-   elseif S{'ma','ws','pet'}:contains(commands[1]) then
+        visible = false
+   elseif S{'weapon','immanence','pet','burst','properties','timer','step','aeonic'}:contains(commands[1]) then
         if not commands[2] then
-            settings[commands[1]] = not settings[commands[1]]
+            settings.show[commands[1]] = not settings.show[commands[1]]
         elseif commands[2] == 'off' then
-            settings[commands[1]] = false
+            settings.show[commands[1]] = false
         elseif commands[2] == 'on' then
-            settings[commands[1]] = true
-        end
-        --windower.add_to_chat(207, '%s will %s be displayed.':format(commands[1] == 'ma' and 'Magic' or 'Weapon Skills',settings[commands[1]] and 'now' or 'NOT'))                                                                                                                                                                   
-        windower.add_to_chat(207, '%s: %s.':format(commands[1],settings[commands[1]] and 'TRUE' or 'FALSE'))
+            settings.show[commands[1]] = true
+            windower.add_to_chat(207, '%s: %s.':format(commands[1],settings.show[commands[1]] and 'TRUE' or 'FALSE'))
     elseif commands[1] == 'save' then
         config.save(settings, 'all')                            
     elseif commands[1] == 'eval' then
