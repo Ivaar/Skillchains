@@ -604,6 +604,7 @@ windower.register_event('addon command', function(...)
         elseif commands[2] == 'on' then
             settings.show[commands[1]] = true
             windower.add_to_chat(207, '%s: %s.':format(commands[1],settings.show[commands[1]] and 'TRUE' or 'FALSE'))
+        end
     elseif commands[1] == 'save' then
         config.save(settings, 'all')                            
     elseif commands[1] == 'eval' then
