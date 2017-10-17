@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar, contributors: Sebyg666, Sammeh,'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.0.2'
+_addon.version = '2.0.3'
 _addon.updated = '2017.10.17'
 
 texts = require('texts')
@@ -37,7 +37,7 @@ config = require('config')
 skills = require('skills')
 
 default = {
-    show = {skills=true,immanence=true,pet=true,burst=true,properties=true,timer=true,step=true,aeonic=false},
+    show = {weapon=true,immanence=true,pet=true,burst=true,properties=true,timer=true,step=true,aeonic=false},
     display = {text={size=12,font='Consolas'},pos={x=0,y=20},},
     burst_display = {text={size=12,font='Consolas'},pos={x=0,y=0},},
     }
