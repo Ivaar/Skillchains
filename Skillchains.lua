@@ -302,8 +302,6 @@ function do_stuff()
         skill_props:text(disp_info)
         skill_props:show()
     elseif not visible then
-        skill_props:hide()
-        magic_bursts:hide()
         do_loop = false
     end
 end
@@ -317,6 +315,8 @@ function loop()
         do_stuff()
         coroutine.sleep(0.2)
     end
+    skill_props:hide()
+    magic_bursts:hide()
 end
 
 function apply_props(packet,ability)
