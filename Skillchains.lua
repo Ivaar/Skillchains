@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar, contributors: Sebyg666, Sammeh,'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.0.3'
+_addon.version = '2.0.4'
 _addon.updated = '2017.10.17'
 
 texts = require('texts')
