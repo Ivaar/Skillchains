@@ -25,11 +25,11 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ]]
-_addon.author = 'Ivaar, contributors: Sebyg666, Sammeh,'
+_addon.author = 'Ivaar, contributors: Sebyg666, Sammeh'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.0.5'
-_addon.updated = '2017.10.18'
+_addon.version = '2.0.6'
+_addon.updated = '2017.10.19'
 
 texts = require('texts')
 packets = require('packets')
@@ -125,7 +125,7 @@ prop_info = {
     }
 
 function reset()
-    chain_ability = {azure={},sch={},blu={}}
+    chain_ability = {[1]={},[2]={}}
     resonating = {}
     do_loop = false
 end
@@ -135,7 +135,9 @@ function delete_timer(dur,...)
     coroutine.schedule(function(...)
         local args = {...}
         return function()
-          chain_ability[args[1]][args[2]] = nil
+            if chain_ability[args[1]][args[2]] == args[3] then
+              chain_ability[args[1]][args[2]] = nil
+            end
         end
     end(...), dur)
 end
@@ -164,7 +166,7 @@ function check_aeonic()
     return skills.aeonic[windower.ffxi.get_items(equip.main_bag, equip.main).id]
 end
 
-function aeonic_props(ability,aeonic,actor)
+function aeonic_props(ability,actor,aeonic)
     local self = windower.ffxi.get_mob_by_target('me').id
     if not ability.aeonic or actor == self and not aeonic or actor ~= self and not settings.show.aeonic then
         return ability.skillchain
@@ -207,7 +209,7 @@ function check_results(reson)
     if settings.show.weapon then
         for i,t in ipairs(abilities.weapon_skills) do
             local ability = skills.weapon[t]
-            local prop = ability and check_props(reson.active,aeonic_props(ability,aeonic,player.id))
+            local prop = ability and check_props(reson.active,aeonic_props(ability,player.id,aeonic))
             local lvl = check_lvl(reson.active,prop)
             if aeonic and prop and lvl == 4 and aeonic_am and aeonic_am <= reson.step then
                 prop = prop_info[prop].aeonic
@@ -217,7 +219,7 @@ function check_results(reson)
             end
         end
     end
-    if settings.show.immanence and player.m_job == 'SCH' then
+    if settings.show.immanence and player.main_job == 'SCH' then
         for k,v in pairs(prop_info) do
             if v.lvl == 1 then
                 local prop = check_props(reson.active,{k})
@@ -226,7 +228,7 @@ function check_results(reson)
                 end
             end
         end
-    elseif settings.show.blu and player.m_job == 'BLU' then
+    elseif settings.show.blu and player.main_job == 'BLU' then
         for i,t in ipairs(windower.ffxi.get_mjob_data().spells) do
             local ability = skills.blu[t]
             local prop = ability and check_props(reson.active,ability.skillchain)
@@ -285,7 +287,7 @@ function do_stuff()
         end
         if settings.show.timer and not resonating[targ.id].closed and now-resonating[targ.id].timer < 3 then
             disp_info = ' wait %s \n':format(3-(now-resonating[targ.id].timer))..disp_info
-        elseif settings.show.timer and not resonating[targ.id].closed and now-resonating[targ.id].timer < 10 then
+        elseif settings.show.timer and not resonating[targ.id].closed then
             disp_info = '  GO! %s \n':format(10-(now-resonating[targ.id].timer))..disp_info
             --for i,v in pairs(colors) do
             --    disp_info = string.gsub(disp_info, i, v..i..'\\cs(255,255,255)')
@@ -294,7 +296,7 @@ function do_stuff()
         if settings.show.step and not resonating[targ.id].closed then
             disp_info = ' Step: %d >> [%s] >> ':format(resonating[targ.id].step,resonating[targ.id].abil_en)..disp_info
         end
-        if settings.show.burst and resonating[targ.id].step > 1 and now-resonating[targ.id].timer < 8 then
+        if settings.show.burst and resonating[targ.id].step > 1 and now-resonating[targ.id].timer <= 8 then
             magic_bursts:text(' Burst:(%s) %s ':format(prop_info[resonating[targ.id].active[1]].elements, 8-(now-resonating[targ.id].timer)))
             magic_bursts:show()
         else
@@ -329,10 +331,10 @@ function apply_props(packet,ability)
     if skillchain then
         local reson = resonating[mob_id]
         local step = (reson and reson.step or 1) + 1
-        local closed = reson and (check_lvl(reson.active,skillchain) == 4 or reson.step == 6)
+        local closed = reson and (check_lvl(reson.active,skillchain) == 4 or step == 6)
         resonating[mob_id] = {abil_en=ability.en,active={skillchain},timer=os.time(),chain=true,closed=closed,step=step}
     elseif L{2,110,161,162,185,187,317}:contains(packet['Target 1 Action 1 Message']) then
-        resonating[mob_id] = {abil_en=ability.en,active=aeonic_props(ability,check_aeonic(),packet.Actor),timer=os.time(),step=1}
+        resonating[mob_id] = {abil_en=ability.en,active=aeonic_props(ability,packet.Actor,check_aeonic()),timer=os.time(),step=1}
     end
     loop()
 end
@@ -344,21 +346,22 @@ windower.register_event('incoming chunk', function(id,data)
             local ability =  skills.weapon[packet.Param]
             apply_props(packet,ability)
         elseif packet.Category == 4 and packet['Target 1 Action 1 Message'] ~= 252 then
+            --get_buffs(windower.ffxi.get_player().buffs)[470]
             local ability = skills.spells[packet.Param] or skills.blu[packet.Param]
-            if ability and (packet['Target 1 Action 1 Has Added Effect'] or chain_ability[packet.Param][packet.Actor]) then
-                chain_ability[packet.Param][packet.Actor] = nil
+            if ability and (packet['Target 1 Action 1 Has Added Effect'] or chain_ability[1][packet.Actor] or chain_ability[2][packet.Actor]) then
+                chain_ability[1][packet.Actor] = nil
                 apply_props(packet,ability)                
             end
         elseif packet.Category == 6 then
             if packet.Param == 93 then
-                chain_ability[packet.Param][packet.Actor] = true
-                delete_timer(40,packet.Param,packet.Actor)
+                chain_ability[2][packet.Actor] = os.time()
+                delete_timer(40,2,packet.Actor,os.time())
             elseif packet.Param == 94 then
-                chain_ability[packet.Param][packet.Actor] = true
-                delete_timer(30,packet.Param,packet.Actor)
+                chain_ability[1][packet.Actor] = os.time()
+                delete_timer(30,1,packet.Actor,os.time())
             elseif packet.Param == 317 then
-                chain_ability[packet.Param][packet.Actor] = true
-                delete_timer(60,packet.Param,packet.Actor)
+                chain_ability[1][packet.Actor] = os.time()
+                delete_timer(60,1,packet.Actor,os.time())
             end
         elseif packet.Category == 11 then
             local ability = skills.monster[packet.Param]
