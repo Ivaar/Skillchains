@@ -404,7 +404,7 @@ skills[11] = {
     [2067] = {id=2067,en="Knockout",skillchain={"Detonation","Scission"}},
     [2091] = {id=2091,en="Meteoric Impact",skillchain={"Fragmentation"}},
     [2137] = {id=2137,en="Meteoric Impact",skillchain={"Fragmentation"}},
-    [2140] = {id=2140,en="Peacebreaker",skillchain={"Gravitation"}},
+    [2140] = {id=2140,en="Peacebreaker",skillchain={"Distortion","Reverberation"}},
     [2273] = {id=2273,en="Uriel Blade",skillchain={"Light","Fragmentation"}},
     [2278] = {id=2278,en="Glory Slash",skillchain={"Light","Fusion"}},
     [2299] = {id=2299,en="Bone Crusher",skillchain={"Fragmentation"}},
@@ -426,7 +426,7 @@ skills[11] = {
     [2893] = {id=2893,en="Powder Keg",skillchain={"Fusion","Compression"}},
     [2894] = {id=2894,en="Walk the Plank",skillchain={"Fragmentation","Distortion"}},
     [2895] = {id=2895,en="Knuckle Sandwich",skillchain={"Fusion"}},
-    [2896] = {id=2896,en="Imperial Authority",skillchain={"Distortion"}},
+    [2896] = {id=2896,en="Imperial Authority",skillchain={"Fragmentation","Distortion"}},
     [2897] = {id=2897,en="Sixth Element",skillchain={"Gravitation"}},
     [3161] = {id=3161,en="Camaraderie of the Crevasse",skillchain={"Detonation","Impaction"}},
     [3162] = {id=3162,en="Into the Light",skillchain={"Fragmentation","Impaction"}},
@@ -453,7 +453,7 @@ skills[11] = {
     [3204] = {id=3204,en="Amatsu: Tsukikage",skillchain={"Fragmentation","Detonation"}},
     [3213] = {id=3213,en="Vortex",skillchain={"Distortion","Reverberation"}},
     [3214] = {id=3214,en="Light Blade",skillchain={"Fusion"}},
-    [3215] = {id=3215,en="Peacebreaker",skillchain={"Gravitation"}},
+    [3215] = {id=3215,en="Peacebreaker",skillchain={"Distortion","Reverberation"}},
     [3216] = {id=3216,en="Red Lotus Blade",skillchain={"Liquefaction","Detonation"}},
     [3217] = {id=3217,en="Savage Blade",skillchain={"Fragmentation","Scission"}},
     [3231] = {id=3231,en="Debonair Rush",skillchain={"Detonation","Transfixion"}},
@@ -463,18 +463,18 @@ skills[11] = {
     [3235] = {id=3235,en="Auroral Uppercut",skillchain={"Fragmentation"}},
     [3236] = {id=3236,en="Knuckle Sandwich",skillchain={"Fusion"}},
     [3240] = {id=3240,en="Meteoric Impact",skillchain={"Fragmentation"}},
-    [3243] = {id=3243,en="Imperial Authority",skillchain={"Distortion"}},
+    [3243] = {id=3243,en="Imperial Authority",skillchain={"Fragmentation","Distortion"}},
     [3244] = {id=3244,en="Sixth Element",skillchain={"Gravitation"}},
-    [3252] = {id=3252,en="Bisection",skillchain={"Fragmentation","Scission"}},
+    [3252] = {id=3252,en="Bisection",skillchain={"Scission","Detonation"}},
     [3253] = {id=3253,en="Leaden Salute",skillchain={"Gravitation","Transfixion"}},
-    [3254] = {id=3254,en="Akimbo Shot",skillchain={"Reverberation","Detonation"}},
-    [3255] = {id=3255,en="Grisly Horizon",skillchain={"Gravitation"}},
+    [3254] = {id=3254,en="Akimbo Shot",skillchain={"Compression"}},
+    [3255] = {id=3255,en="Grisly Horizon",skillchain={"Darkness","Distortion"}},
     [3256] = {id=3256,en="Hane Fubuki",skillchain={"Transfixion"}},
     [3257] = {id=3257,en="Shibaraku",skillchain={"Gravitation"}},
     [3259] = {id=3259,en="Happobarai",skillchain={"Reverberation","Impaction"}},
     [3262] = {id=3262,en="Goblin Rush",skillchain={"Fusion","Impaction"}},
     [3283] = {id=3283,en="Iniquitous Stab",skillchain={"Gravitation"}},
-    [3284] = {id=3284,en="Shockstorm Edge",skillchain={"Detonation","Impaction"}},
+    [3284] = {id=3284,en="Shockstorm Edge",skillchain={"Detonation"}},
     [3286] = {id=3286,en="Lock and Load",skillchain={"Fusion"}},
     [3310] = {id=3310,en="Dancer's Fury",skillchain={"Fragmentation"}},
     [3311] = {id=3311,en="Whirling Edge",skillchain={"Distortion"}},
@@ -735,7 +735,7 @@ skills[14] = {
     [209] = {en='Wild Flourish',skillchain={'Liquefaction','Induration','Reverberation','Compression','Impaction'},dur=10,wait=3,},
     [320] = {en='Konzen-ittai',skillchain={'Light','Darkness','Gravitation','Fragmentation','Distortion','Fusion','Liquefaction','Induration','Reverberation','Compression','Impaction'},dur=60,wait=0,},
     }
-    
+
 skills.aeonic = {
     [22117] = 203,
     [20977] = 141,
@@ -752,5 +752,5 @@ skills.aeonic = {
     [21025] = 157,
     [20843] = 93,
     }
-    
+
 return skills
