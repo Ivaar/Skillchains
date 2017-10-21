@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar, contributors: Sebyg666, Sammeh'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.0.7'
-_addon.updated = '2017.10.20'
+_addon.version = '2.0.8'
+_addon.updated = '2017.10.21'
 
 texts = require('texts')
 packets = require('packets')
@@ -130,15 +130,16 @@ function reset()
 end
 reset()
 
-function delete_timer(dur,...)
-    coroutine.schedule(function(...)
-        local args = {...}
+function create_timer(dur,ind,act)
+    local start = os.time()
+    chain_ability[ind][act] = start
+    coroutine.schedule(function(ind,act,start)
         return function()
-            if chain_ability[args[1]][args[2]] == args[3] then
-              chain_ability[args[1]][args[2]] = nil
+            if chain_ability[ind][act] == start then
+              chain_ability[ind][act] = nil
             end
         end
-    end(...), dur)
+    end(ind,act,start), dur)
 end
 
 function get_buffs(buff_list)
@@ -177,7 +178,6 @@ function aeonic_props(ability,actor,aeonic)
 end
 
 function check_lvl(active,new)
-    if not new then return end
     for k,v in pairs(active) do
         if prop_info[new].lvl == 3 and prop_info[v].lvl == 3 then
             return 4
@@ -209,11 +209,11 @@ function check_results(reson)
         for i,t in ipairs(abilities.weapon_skills) do
             local ability = skills[3][t]
             local prop = ability and check_props(reson.active,aeonic_props(ability,player.id,aeonic))
-            local lvl = check_lvl(reson.active,prop)
-            if aeonic and prop and lvl == 4 and aeonic_am and aeonic_am <= reson.step then
-                prop = prop_info[prop].aeonic
-            end
             if prop then
+                local lvl = check_lvl(reson.active,prop)
+                if lvl == 4 and aeonic_am and aeonic_am <= reson.step then
+                    prop = prop_info[prop].aeonic
+                end
                 weapon[ability.en] = {lvl=lvl,prop=prop}
             end
         end
@@ -278,7 +278,7 @@ function do_stuff()
         if settings.show.properties and not resonating[targ.id].closed then
             if #resonating[targ.id].active < 4 then
                 for k,element in ipairs(resonating[targ.id].active) do
-                    disp_info = ' [%s]':format(element)
+                    disp_info = disp_info..' [%s]':format(element)
                 end
             else
                 disp_info = ' [Chainbound Lv %d]':format(prop_info[resonating[targ.id].active[1]].lvl)
@@ -332,31 +332,26 @@ function apply_props(packet)
     elseif L{2,110,161,162,185,187,317}:contains(packet['Target 1 Action 1 Message']) then
         resonating[mob.id] = {en=ability.en,active=aeonic_props(ability,packet.Actor,check_aeonic()),timer=os.time(),dur=10,wait=3,step=1}
     elseif packet['Target 1 Action 1 Message'] == 529 then
-        resonating[mob.id] = {en=ability.en,active=ability.skillchain,timer=os.time(),dur=ability.dur,wait=ability.wait,step=1}
-    end
-    do_stuff()
+        resonating[mob.id] = {en=ability.en,active=ability.skillchain,timer=os.time(),dur=ability.dur,wait=0,step=1}
+    end          
 end
 
 windower.register_event('incoming chunk', function(id,data)
     if id == 0x028 then
         local packet = packets.parse('incoming', data)
-        if packet.Category == 4 then
-            if skills[4][packet.Param] and (packet['Target 1 Action 1 Has Added Effect'] or chain_ability[1][packet.Actor] or chain_ability[2][packet.Actor]) then
-                chain_ability[1][packet.Actor] = nil
-                apply_props(packet)
-            end
-        elseif skills[packet.Category] and skills[packet.Category][packet.Param] then
+        if packet.Category == 4 and skills[4][packet.Param] and 
+            (packet['Target 1 Action 1 Has Added Effect'] or chain_ability[1][packet.Actor] or chain_ability[2][packet.Actor]) then
+            chain_ability[1][packet.Actor] = nil
+            apply_props(packet)
+        elseif L{3,11,13,14}:contains(packet.Category) and skills[packet.Category][packet.Param] then
             apply_props(packet)
         elseif packet.Category == 6 then
             if packet.Param == 93 then
-                chain_ability[2][packet.Actor] = os.time()
-                delete_timer(40,2,packet.Actor,os.time())
+                create_timer(40,2,packet.Actor)
             elseif packet.Param == 94 then
-                chain_ability[1][packet.Actor] = os.time()
-                delete_timer(30,1,packet.Actor,os.time())
+                create_timer(30,1,packet.Actor)
             elseif packet.Param == 317 then
-                chain_ability[1][packet.Actor] = os.time()
-                delete_timer(60,1,packet.Actor,os.time())
+                create_timer(60,1,packet.Actor)
             end
         end
     --[[elseif id == 0x076 then  -- Byrth Gearswap
