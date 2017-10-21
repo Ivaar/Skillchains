@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar, contributors: Sebyg666, Sammeh'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.0.6'
-_addon.updated = '2017.10.19'
+_addon.version = '2.0.7'
+_addon.updated = '2017.10.20'
 
 texts = require('texts')
 packets = require('packets')
@@ -127,7 +127,6 @@ prop_info = {
 function reset()
     chain_ability = {[1]={},[2]={}}
     resonating = {}
-    do_loop = false
 end
 reset()
 
@@ -208,7 +207,7 @@ function check_results(reson)
     local aeonic_am = aeonic and check_am(player.buffs)
     if settings.show.weapon then
         for i,t in ipairs(abilities.weapon_skills) do
-            local ability = skills.weapon[t]
+            local ability = skills[3][t]
             local prop = ability and check_props(reson.active,aeonic_props(ability,player.id,aeonic))
             local lvl = check_lvl(reson.active,prop)
             if aeonic and prop and lvl == 4 and aeonic_am and aeonic_am <= reson.step then
@@ -230,7 +229,7 @@ function check_results(reson)
         end
     elseif settings.show.blu and player.main_job == 'BLU' then
         for i,t in ipairs(windower.ffxi.get_mjob_data().spells) do
-            local ability = skills.blu[t]
+            local ability = skills[4][t]
             local prop = ability and check_props(reson.active,ability.skillchain)
             if prop then
                 spell[ability.en] = {lvl=check_lvl(reson.active,prop),prop=prop}
@@ -238,7 +237,7 @@ function check_results(reson)
         end
     elseif settings.show.pet and windower.ffxi.get_mob_by_target('pet') then
         for i,t in ipairs(abilities.job_abilities) do
-            local ability = skills.abilities[t]
+            local ability = skills[13][t]
             local prop = ability and check_props(reson.active,ability.skillchain)
             if prop then 
                 pet[ability.en] = {lvl=check_lvl(reson.active,prop),prop=prop}
@@ -270,34 +269,38 @@ function do_stuff()
     local targ = windower.ffxi.get_mob_by_target('t','bt')
     local now = os.time()
     for k,v in pairs(resonating) do
-        if v.timer and now-v.timer >= 10 then
+        if v.timer and now-v.timer > v.dur then
             resonating[k] = nil
         end
     end
-    if targ and targ.hpp > 0 and resonating[targ.id] then
+    if targ and targ.hpp > 0 and resonating[targ.id] and resonating[targ.id].dur-(now-resonating[targ.id].timer) > 0 then
         local disp_info = ''
         if settings.show.properties and not resonating[targ.id].closed then
-            for k,element in ipairs(resonating[targ.id].active) do
-                disp_info = disp_info..' [%s]':format(element)
+            if #resonating[targ.id].active < 4 then
+                for k,element in ipairs(resonating[targ.id].active) do
+                    disp_info = ' [%s]':format(element)
+                end
+            else
+                disp_info = ' [Chainbound Lv %d]':format(prop_info[resonating[targ.id].active[1]].lvl)
             end
             disp_info = disp_info..'\n'
         end
         if not resonating[targ.id].closed then
             disp_info = disp_info..display_results(check_results(resonating[targ.id]))
         end
-        if settings.show.timer and not resonating[targ.id].closed and now-resonating[targ.id].timer < 3 then
-            disp_info = ' wait %s \n':format(3-(now-resonating[targ.id].timer))..disp_info
+        if settings.show.timer and not resonating[targ.id].closed and now-resonating[targ.id].timer < resonating[targ.id].wait then
+            disp_info = ' wait %s \n':format(resonating[targ.id].wait-(now-resonating[targ.id].timer))..disp_info
         elseif settings.show.timer and not resonating[targ.id].closed then
-            disp_info = '  GO! %s \n':format(10-(now-resonating[targ.id].timer))..disp_info
+            disp_info = '  GO! %s \n':format(resonating[targ.id].dur-(now-resonating[targ.id].timer))..disp_info
             --for i,v in pairs(colors) do
             --    disp_info = string.gsub(disp_info, i, v..i..'\\cs(255,255,255)')
             --end
         end
         if settings.show.step and not resonating[targ.id].closed then
-            disp_info = ' Step: %d >> [%s] >> ':format(resonating[targ.id].step,resonating[targ.id].abil_en)..disp_info
+            disp_info = ' Step: %d >> [%s] >> ':format(resonating[targ.id].step,resonating[targ.id].en)..disp_info
         end
-        if settings.show.burst and resonating[targ.id].step > 1 and now-resonating[targ.id].timer <= 8 then
-            magic_bursts:text(' Burst:(%s) %s ':format(prop_info[resonating[targ.id].active[1]].elements, 8-(now-resonating[targ.id].timer)))
+        if settings.show.burst and resonating[targ.id].step > 1 then
+            magic_bursts:text(' Burst:(%s) %s ':format(prop_info[resonating[targ.id].active[1]].elements, resonating[targ.id].dur-(now-resonating[targ.id].timer)))
             magic_bursts:show()
         else
             magic_bursts:hide()
@@ -305,53 +308,45 @@ function do_stuff()
         skill_props:text(disp_info)
         skill_props:show()
     elseif not visible then
-        do_loop = false
+        skill_props:hide()
+        magic_bursts:hide()
     end
 end
 
 function loop()
-    if do_loop then
-        return 
-    end
-    do_loop = true
-    while do_loop do
-        do_stuff()
-        coroutine.sleep(0.2)
-    end
-    skill_props:hide()
-    magic_bursts:hide()
+	while doloop do
+		do_stuff()
+		coroutine.sleep(0.2)
+	end	
 end
 
-function apply_props(packet,ability)
-    if not ability then return end
-    local mob_id = packet['Target 1 ID']
-    local mob = windower.ffxi.get_mob_by_id(mob_id)
+function apply_props(packet)
+    local mob = windower.ffxi.get_mob_by_id(packet['Target 1 ID'])
     if not mob or not mob.is_npc or mob.hpp == 0 then return end
+    local ability = skills[packet.Category][packet.Param]
     local skillchain = skillchains[packet['Target 1 Action 1 Added Effect Message']]
     if skillchain then
-        local reson = resonating[mob_id]
-        local step = (reson and reson.step or 1) + 1
-        local closed = reson and (check_lvl(reson.active,skillchain) == 4 or step == 6)
-        resonating[mob_id] = {abil_en=ability.en,active={skillchain},timer=os.time(),chain=true,closed=closed,step=step}
+        local step = (resonating[mob.id] and resonating[mob.id].step or 1) + 1
+        local closed = resonating[mob.id] and (check_lvl(resonating[mob.id].active,skillchain) == 4 or step >= 6)
+        resonating[mob.id] = {en=ability.en,active={skillchain},timer=os.time(),dur=11-step,wait=3,chain=true,closed=closed,step=step}
     elseif L{2,110,161,162,185,187,317}:contains(packet['Target 1 Action 1 Message']) then
-        resonating[mob_id] = {abil_en=ability.en,active=aeonic_props(ability,packet.Actor,check_aeonic()),timer=os.time(),step=1}
+        resonating[mob.id] = {en=ability.en,active=aeonic_props(ability,packet.Actor,check_aeonic()),timer=os.time(),dur=10,wait=3,step=1}
+    elseif packet['Target 1 Action 1 Message'] == 529 then
+        resonating[mob.id] = {en=ability.en,active=ability.skillchain,timer=os.time(),dur=ability.dur,wait=ability.wait,step=1}
     end
-    loop()
+    do_stuff()
 end
 
 windower.register_event('incoming chunk', function(id,data)
     if id == 0x028 then
         local packet = packets.parse('incoming', data)
-        if packet.Category == 3 then
-            local ability =  skills.weapon[packet.Param]
-            apply_props(packet,ability)
-        elseif packet.Category == 4 and packet['Target 1 Action 1 Message'] ~= 252 then
-            --get_buffs(windower.ffxi.get_player().buffs)[470]
-            local ability = skills.spells[packet.Param] or skills.blu[packet.Param]
-            if ability and (packet['Target 1 Action 1 Has Added Effect'] or chain_ability[1][packet.Actor] or chain_ability[2][packet.Actor]) then
+        if packet.Category == 4 then
+            if skills[4][packet.Param] and (packet['Target 1 Action 1 Has Added Effect'] or chain_ability[1][packet.Actor] or chain_ability[2][packet.Actor]) then
                 chain_ability[1][packet.Actor] = nil
-                apply_props(packet,ability)                
+                apply_props(packet)
             end
+        elseif skills[packet.Category] and skills[packet.Category][packet.Param] then
+            apply_props(packet)
         elseif packet.Category == 6 then
             if packet.Param == 93 then
                 chain_ability[2][packet.Actor] = os.time()
@@ -363,12 +358,6 @@ windower.register_event('incoming chunk', function(id,data)
                 chain_ability[1][packet.Actor] = os.time()
                 delete_timer(60,1,packet.Actor,os.time())
             end
-        elseif packet.Category == 11 then
-            local ability = skills.monster[packet.Param]
-            apply_props(packet,ability)
-        elseif packet.Category == 13 then
-            local ability = skills.abilities[packet.Param]
-            apply_props(packet,ability)
         end
     --[[elseif id == 0x076 then  -- Byrth Gearswap
         partybuffs = {}
@@ -416,4 +405,13 @@ windower.register_event('addon command', function(...)
     end
 end)
 
-windower.register_event('zone change','logout','unload', reset)
+windower.register_event('unload', function()
+	doloop = false
+end)
+
+windower.register_event('load', function()
+	doloop = true
+	loop()
+end)
+
+windower.register_event('zone change','logout', reset)
