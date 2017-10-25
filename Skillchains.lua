@@ -28,11 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar, contributors: Sebyg666, Sammeh'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.0.8'
-_addon.updated = '2017.10.21'
+_addon.version = '2.0.9'
+_addon.updated = '2017.10.22'
 
 texts = require('texts')
-packets = require('packets')
 config = require('config')
 skills = require('skills')
 
@@ -273,40 +272,44 @@ function do_stuff()
             resonating[k] = nil
         end
     end
-    if targ and targ.hpp > 0 and resonating[targ.id] and resonating[targ.id].dur-(now-resonating[targ.id].timer) > 0 then
-        local disp_info = ''
-        if settings.show.properties and not resonating[targ.id].closed then
-            if #resonating[targ.id].active < 4 then
-                for k,element in ipairs(resonating[targ.id].active) do
-                    disp_info = disp_info..' [%s]':format(element)
-                end
-            else
-                disp_info = ' [Chainbound Lv %d]':format(prop_info[resonating[targ.id].active[1]].lvl)
+    if targ and targ.hpp > 0 and resonating[targ.id] then
+        local timediff = now-resonating[targ.id].timer
+        local timer = resonating[targ.id].dur-timediff
+        if timer > 0 then
+            local disp_info = resonating[targ.id].disp_info or ''
+            if not resonating[targ.id].closed and disp_info == '' then
+                disp_info = display_results(check_results(resonating[targ.id]))
             end
-            disp_info = disp_info..'\n'
+            if settings.show.properties and not resonating[targ.id].closed then
+                disp_info = '\n'..disp_info
+                if not resonating[targ.id].chain then
+                    for k,element in ipairs(resonating[targ.id].active) do
+                        disp_info = ' [%s]':format(element)..disp_info
+                    end
+                else
+                    disp_info = ' [Chainbound Lv.%d]':format(resonating[targ.id].chain)..disp_info
+                end
+            end
+            if settings.show.timer and not resonating[targ.id].closed then
+                if timediff < resonating[targ.id].wait then
+                    disp_info = ' wait %s \n':format(resonating[targ.id].wait-timediff)..disp_info
+                else
+                    disp_info = '  GO! %s \n':format(timer)..disp_info
+                    --for i,v in pairs(colors) do
+                    --    disp_info = string.gsub(disp_info, i, v..i..'\\cs(255,255,255)')
+                    --end
+                end
+            end
+            if settings.show.step and not resonating[targ.id].closed then
+                disp_info = ' Step: %d >> [%s] >> ':format(resonating[targ.id].step,resonating[targ.id].en)..disp_info
+            end
+            if settings.show.burst and resonating[targ.id].step > 1 then
+                magic_bursts:text(' Burst:(%s) %s ':format(prop_info[resonating[targ.id].active[1]].elements,timer))
+                magic_bursts:show()
+            end
+            skill_props:text(disp_info)
+            skill_props:show()
         end
-        if not resonating[targ.id].closed then
-            disp_info = disp_info..display_results(check_results(resonating[targ.id]))
-        end
-        if settings.show.timer and not resonating[targ.id].closed and now-resonating[targ.id].timer < resonating[targ.id].wait then
-            disp_info = ' wait %s \n':format(resonating[targ.id].wait-(now-resonating[targ.id].timer))..disp_info
-        elseif settings.show.timer and not resonating[targ.id].closed then
-            disp_info = '  GO! %s \n':format(resonating[targ.id].dur-(now-resonating[targ.id].timer))..disp_info
-            --for i,v in pairs(colors) do
-            --    disp_info = string.gsub(disp_info, i, v..i..'\\cs(255,255,255)')
-            --end
-        end
-        if settings.show.step and not resonating[targ.id].closed then
-            disp_info = ' Step: %d >> [%s] >> ':format(resonating[targ.id].step,resonating[targ.id].en)..disp_info
-        end
-        if settings.show.burst and resonating[targ.id].step > 1 then
-            magic_bursts:text(' Burst:(%s) %s ':format(prop_info[resonating[targ.id].active[1]].elements, resonating[targ.id].dur-(now-resonating[targ.id].timer)))
-            magic_bursts:show()
-        else
-            magic_bursts:hide()
-        end
-        skill_props:text(disp_info)
-        skill_props:show()
     elseif not visible then
         skill_props:hide()
         magic_bursts:hide()
@@ -317,41 +320,66 @@ function loop()
 	while doloop do
 		do_stuff()
 		coroutine.sleep(0.2)
-	end	
+	end
 end
 
-function apply_props(packet)
-    local mob = windower.ffxi.get_mob_by_id(packet['Target 1 ID'])
-    if not mob or not mob.is_npc or mob.hpp == 0 then return end
-    local ability = skills[packet.Category][packet.Param]
-    local skillchain = skillchains[packet['Target 1 Action 1 Added Effect Message']]
+local function get_bit_packed(dat_string, start, stop) -- Byrth Battlemod
+    dat_string = dat_string:sub(5)
+    local newval = 0   
+    local c_count = math.ceil(stop/8)
+    while c_count >= math.ceil((start+1)/8) do
+        local cur_val = dat_string:byte(c_count)
+        local scal = 256
+        if c_count == math.ceil(stop/8) then
+            cur_val = cur_val%(2^((stop-1)%8+1))
+        end
+        if c_count == math.ceil((start+1)/8) then
+            cur_val = math.floor(cur_val/(2^(start%8)))
+            scal = 2^(8-start%8)
+        end
+        newval = newval*scal + cur_val
+        c_count = c_count - 1
+    end
+    return newval
+end
+
+function apply_props(data,actor,ability)
+    local mob = windower.ffxi.get_mob_by_id(get_bit_packed(data,118,150))
+    if not mob or not mob.is_npc or mob.hpp == 0 then
+        return
+    end
+    local message = get_bit_packed(data,198,208)
+    local skillchain = skillchains[get_bit_packed(data,267,277)]
     if skillchain then
         local step = (resonating[mob.id] and resonating[mob.id].step or 1) + 1
         local closed = resonating[mob.id] and (check_lvl(resonating[mob.id].active,skillchain) == 4 or step >= 6)
-        resonating[mob.id] = {en=ability.en,active={skillchain},timer=os.time(),dur=11-step,wait=3,chain=true,closed=closed,step=step}
-    elseif L{2,110,161,162,185,187,317}:contains(packet['Target 1 Action 1 Message']) then
-        resonating[mob.id] = {en=ability.en,active=aeonic_props(ability,packet.Actor,check_aeonic()),timer=os.time(),dur=10,wait=3,step=1}
-    elseif packet['Target 1 Action 1 Message'] == 529 then
-        resonating[mob.id] = {en=ability.en,active=ability.skillchain,timer=os.time(),dur=ability.dur,wait=0,step=1}
-    end          
+        resonating[mob.id] = {en=ability.en,active={skillchain},timer=os.time(),dur=11-step,wait=3,closed=closed,step=step}
+    elseif L{2,110,161,162,185,187,317}:contains(message) then
+        resonating[mob.id] = {en=ability.en,active=aeonic_props(ability,actor,check_aeonic()),timer=os.time(),dur=10,wait=3,step=1}
+    elseif message == 529 then
+        resonating[mob.id] = {en=ability.en,active=ability.skillchain,timer=os.time(),dur=ability.dur,wait=0,step=1,chain=get_bit_packed(data,181,198)}
+    end
 end
 
 windower.register_event('incoming chunk', function(id,data)
     if id == 0x028 then
-        local packet = packets.parse('incoming', data)
-        if packet.Category == 4 and skills[4][packet.Param] and 
-            (packet['Target 1 Action 1 Has Added Effect'] or chain_ability[1][packet.Actor] or chain_ability[2][packet.Actor]) then
-            chain_ability[1][packet.Actor] = nil
-            apply_props(packet)
-        elseif L{3,11,13,14}:contains(packet.Category) and skills[packet.Category][packet.Param] then
-            apply_props(packet)
-        elseif packet.Category == 6 then
-            if packet.Param == 93 then
-                create_timer(40,2,packet.Actor)
-            elseif packet.Param == 94 then
-                create_timer(30,1,packet.Actor)
-            elseif packet.Param == 317 then
-                create_timer(60,1,packet.Actor)
+        local actor = get_bit_packed(data,8,40)
+        local category = get_bit_packed(data,50,54)
+        local param = get_bit_packed(data,54,70)
+        if category == 4 and skills[4][param] then
+            if get_bit_packed(data,239,240) == 1 or chain_ability[1][actor] or chain_ability[2][actor] then
+                chain_ability[1][actor] = nil
+                apply_props(data,actor,skills[category][param])
+            end
+        elseif skills[category] and skills[category][param] then
+            apply_props(data,actor,skills[category][param])
+        elseif category == 6 then
+            if param == 93 then
+                create_timer(40,2,actor)
+            elseif param == 94 then
+                create_timer(30,1,actor)
+            elseif param == 317 then
+                create_timer(60,1,actor)
             end
         end
     --[[elseif id == 0x076 then  -- Byrth Gearswap
@@ -384,7 +412,7 @@ windower.register_event('addon command', function(...)
         visible = false
         magic_bursts:hide()
         skill_props:hide()
-   elseif S{'weapon','immanence','pet','burst','properties','timer','step','aeonic'}:contains(commands[1]) then
+   elseif settings.show[commands[1]] then
         if not commands[2] then
             settings.show[commands[1]] = not settings.show[commands[1]]
         elseif commands[2] == 'off' then
