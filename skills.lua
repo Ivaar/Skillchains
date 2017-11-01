@@ -780,4 +780,15 @@ skills.aeonic = {
     [20843] = 93,
     }
 
+skills[20] = {
+    [1]={en='Fire',skillchain={'Liquefaction'}},
+    [2]={en='Ice',skillchain={'Induration'}},
+    [3]={en='Wind',skillchain={'Detonation'}},
+    [4]={en='Earth',skillchain={'Scission'}},
+    [5]={en='Lightning',skillchain={'Impaction'}},
+    [6]={en='Water',skillchain={'Reverberation'}},
+    [7]={en='Light',skillchain={'Transfixion'}},
+    [8]={en='Dark',skillchain={'Compression'}},
+    }
+
 return skills
