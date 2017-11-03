@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar, contributors: Sebyg666, Sammeh'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.1.0'
+_addon.version = '2.1.1'
 _addon.updated = '2017.10.28'
 
 texts = require('texts')
@@ -224,20 +224,21 @@ function add_color(str)
     return '%s%s\\cs(%d,%d,%d)':format(colors[str],str,settings.display.text.red,settings.display.text.green,settings.display.text.blue)
 end
 
+function add_skills(abilities,active,cat,aeonic)
+    local t = L{}
+    for k=1,#abilities do local v = abilities[k]
+        local ability = skills[cat][v]
+        local prop = ability and check_props(active,ability.aeonic and aeonic_prop(ability,player.index) or ability.skillchain)
+        if prop then
+	    t:append({'%s >> Lv':format(ability.en:rpad(' ', 15)),check_lvl(active,prop),add_color(aeonic and check_lvl(active,prop) == 4 and prop_info[prop].aeonic or prop)})
+        end
+    end
+    return table.sort(t, function(a, b) return a[2] > b[2] end)
+end
+
 function check_results(reson)
     local abilities = {[1]=L{},[2]=L{}}
     local player = windower.ffxi.get_player()
-    local function add_skills(abilities,active,cat,aeonic)
-        local t = L{}
-        for k=1,#abilities do local v = abilities[k]
-            local ability = skills[cat][v]
-            local prop = ability and check_props(active,ability.aeonic and aeonic_prop(ability,player.index) or ability.skillchain)
-            if prop then
-                t:append({'%s >> Lv':format(ability.en:rpad(' ', 15)),check_lvl(active,prop),add_color(aeonic and check_lvl(active,prop) == 4 and prop_info[prop].aeonic or prop)})
-            end
-        end
-        return table.sort(t, function(a, b) return a[2] > b[2] end)
-    end
     if player.main_job == 'SCH' and player.main_job_level >= 87 and settings.Show.ability:find('SCH') then
         abilities[1] = add_skills({1,2,3,4,5,6,7,8},reson.active,20) 
     elseif player.main_job == 'BLU' and settings.Show.ability:find('BLU') then
