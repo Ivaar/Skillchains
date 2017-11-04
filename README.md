@@ -6,23 +6,21 @@ along with a list of weapon skills that can skillchain based on the weapon you h
 
 //sc move    -- displays text box click and drag it to desired location.
 
-//sc save    -- saves changes to settings
+//sc save    -- saves current settings to ALL characters.
 
 
-The following commands allow you to hide the display information. Commands accept on/off if not provided will toggle.
+The following commands allow you to hide/show the display information, they are saved on a per job basis.
 
-//sc weapon       -- weapon skills 
+//sc ability      -- sch immanence, blue magic spells and pet skills.
 
-//sc burst        -- magic burst elements
+//sc weapon       -- weapon skills.
 
-//sc pet          -- pet skills
+//sc burst        -- magic burst elements.
 
-//sc immanence    -- scholar immanence elements
+//sc properties   -- skillchain properties currently active on target.
 
-//sc properties   -- current properties active on target
+//sc timer        -- skillchain window timer.
 
-//sc timer        -- skillchain window timer
-
-//sc step         -- current weaponskill step
+//sc step         -- current weaponskill step information.
 
 More settings related to text object can be found within the settings.xml, generated on addon load
