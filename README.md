@@ -17,7 +17,7 @@ The following commands allow you to hide/show the display information, they are 
 
 //sc burst        -- magic burst elements.
 
-//sc properties   -- skillchain properties currently active on target.
+//sc props   -- skillchain properties currently active on target.
 
 //sc timer        -- skillchain window timer.
 
