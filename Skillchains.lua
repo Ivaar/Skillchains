@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar, contributors: Sebyg666, Sammeh'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.1.2'
-_addon.updated = '2017.11.03'
+_addon.version = '2.1.3'
+_addon.updated = '2017.11.04'
 
 texts = require('texts')
 config = require('config')
@@ -198,13 +198,15 @@ function aeonic_prop(ability,actor,aeonic)
     return {ability.skillchain[1],ability.skillchain[2],ability.aeonic}
 end
 
-function check_lvl(old,new)
+function check_lvl(old,new,prop)
     for k=1,#old do
-        if prop_info[new].lvl == 3 and prop_info[old[k]].lvl == 3 then
-            return 4
+        for x=1,#new do
+            if prop_info[old[k]].props[new[x]] and prop_info[prop].lvl == 3 and old[k] == new[x] then
+                return 4
+            end
         end
     end
-    return prop_info[new].lvl
+    return prop_info[prop].lvl
 end
 
 function check_props(old,new)
