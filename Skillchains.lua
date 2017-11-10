@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar, contributors: Sebyg666, Sammeh'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.1.4'
-_addon.updated = '2017.11.05'
+_addon.version = '2.1.5'
+_addon.updated = '2017.11.09'
 
 require('pack')
 texts = require('texts')
@@ -191,7 +191,7 @@ function aeonic_am(buffs,step)
     end
 end
 
-function aeonic_prop(ability,actor,aeonic)
+function aeonic_prop(ability,actor)
     local self = windower.ffxi.get_mob_by_target('me').id
     if actor == self and not aeonic_weapon or actor ~= self and not settings.Aeonic then
        return ability.skillchain
@@ -229,11 +229,11 @@ function add_color(str)
     return '%s%s\\cs(%d,%d,%d)':format(colors[str],str,settings.display.text.red,settings.display.text.green,settings.display.text.blue)
 end
 
-function add_skills(abilities,active,cat,ind,aeonic)
+function add_skills(abilities,active,cat,id,aeonic)
     local t = L{}
     for k=1,#abilities do local v = abilities[k]
         local ability = skills[cat][v]
-        local prop = ability and check_props(active,ability.aeonic and aeonic and aeonic_prop(ability,ind) or ability.skillchain)
+        local prop = ability and check_props(active,ability.aeonic and aeonic and aeonic_prop(ability,id) or ability.skillchain)
         if prop then
             t:append({'%s >> Lv':format(ability.en:rpad(' ',15)),check_lvl(active,ability.skillchain,prop),add_color(aeonic and check_lvl(active,ability.skillchain,prop) == 4 and prop_info[prop].aeonic or prop)})
         end
@@ -252,7 +252,7 @@ function check_results(reson)
         t[1] = add_skills(windower.ffxi.get_abilities().job_abilities,reson.active,13)
     end
     if settings.Show.weapon:find(player.main_job) then
-        t[2] = add_skills(windower.ffxi.get_abilities().weapon_skills,reson.active,3,player.index,aeonic_weapon and aeonic_am(player.buffs,reson.step))
+        t[2] = add_skills(windower.ffxi.get_abilities().weapon_skills,reson.active,3,player.id,aeonic_weapon and aeonic_am(player.buffs,reson.step))
     end
     local skill_list = L{}
     for x=1,2 do
