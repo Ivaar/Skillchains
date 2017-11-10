@@ -28,9 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar, contributors: Sebyg666, Sammeh'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.1.3'
-_addon.updated = '2017.11.04'
+_addon.version = '2.1.4'
+_addon.updated = '2017.11.05'
 
+require('pack')
 texts = require('texts')
 config = require('config')
 skills = require('skills')
@@ -201,8 +202,11 @@ end
 function check_lvl(old,new,prop)
     for k=1,#old do
         for x=1,#new do
-            if prop_info[old[k]].props[new[x]] and prop_info[prop].lvl == 3 and old[k] == new[x] then
-                return 4
+            if prop_info[old[k]].props[new[x]] then
+                if old[k] == new[x] and prop_info[prop].lvl == 3 then
+                    return 4
+                end
+                break
             end
         end
     end
@@ -211,17 +215,16 @@ end
 
 function check_props(old,new)
     for k=1,#old do
-        local props = prop_info[old[k]].props
         for x=1,#new do
-            local v = props[new[x]]
-            if v then
-                return v
+            if prop_info[old[k]].props[new[x]] then
+                return prop_info[old[k]].props[new[x]]
             end
         end
     end
 end
 
 function add_color(str)
+    if not str then return end
     if not settings.Color then return str end
     return '%s%s\\cs(%d,%d,%d)':format(colors[str],str,settings.display.text.red,settings.display.text.green,settings.display.text.blue)
 end
@@ -230,31 +233,31 @@ function add_skills(abilities,active,cat,ind,aeonic)
     local t = L{}
     for k=1,#abilities do local v = abilities[k]
         local ability = skills[cat][v]
-        local prop = ability and check_props(active,ability.aeonic and aeonic_prop(ability,ind) or ability.skillchain)
+        local prop = ability and check_props(active,ability.aeonic and aeonic and aeonic_prop(ability,ind) or ability.skillchain)
         if prop then
-	    t:append({'%s >> Lv':format(ability.en:rpad(' ', 15)),check_lvl(active,prop),add_color(aeonic and check_lvl(active,prop) == 4 and prop_info[prop].aeonic or prop)})
+            t:append({'%s >> Lv':format(ability.en:rpad(' ',15)),check_lvl(active,ability.skillchain,prop),add_color(aeonic and check_lvl(active,ability.skillchain,prop) == 4 and prop_info[prop].aeonic or prop)})
         end
     end
     return table.sort(t, function(a, b) return a[2] > b[2] end)
 end
 
 function check_results(reson)
-    local abilities = {[1]=L{},[2]=L{}}
+    local t = {[1]=L{},[2]=L{}}
     local player = windower.ffxi.get_player()
     if player.main_job == 'SCH' and player.main_job_level >= 87 and settings.Show.ability:find('SCH') then
-        abilities[1] = add_skills({1,2,3,4,5,6,7,8},reson.active,20) 
+        t[1] = add_skills({1,2,3,4,5,6,7,8},reson.active,20) 
     elseif player.main_job == 'BLU' and settings.Show.ability:find('BLU') then
-        abilities[1] = add_skills(windower.ffxi.get_mjob_data().spells,reson.active,4)
+        t[1] = add_skills(windower.ffxi.get_mjob_data().spells,reson.active,4)
     elseif windower.ffxi.get_mob_by_target('pet') and settings.Show.ability:find(player.main_job) then
-        abilities[1] = add_skills(windower.ffxi.get_abilities().job_abilities,reson.active,13)
+        t[1] = add_skills(windower.ffxi.get_abilities().job_abilities,reson.active,13)
     end
     if settings.Show.weapon:find(player.main_job) then
-        abilities[2] = add_skills(windower.ffxi.get_abilities().weapon_skills,reson.active,3,player.index,aeonic_weapon and aeonic_am(player.buffs,reson.step))
+        t[2] = add_skills(windower.ffxi.get_abilities().weapon_skills,reson.active,3,player.index,aeonic_weapon and aeonic_am(player.buffs,reson.step))
     end
     local skill_list = L{}
     for x=1,2 do
-        for entry in abilities[x]:it() do
-            skill_list:append(table.concat(entry,' '))
+        for v in t[x]:it() do
+            skill_list:append(table.concat(v,' '))
         end
     end
     return skill_list:concat('\n'):gsub('Lv ','Lv.')
@@ -272,11 +275,8 @@ function do_stuff()
         local timediff = now-resonating[targ.index].ts
         local timer = resonating[targ.index].dur-timediff
         if resonating[targ.index].step > 1 and settings.Show.burst:find(windower.ffxi.get_player().main_job) then
-            local elements = L{}
-            for entry in prop_info[resonating[targ.index].active[1]].elements:it() do
-             elements:append(add_color(entry))
-            end
-            magic_burst:text('[%s] (%s) %s':format(resonating[targ.index].active[1],elements:concat(' '),timer))
+            local a,b,c,d = table.unpack(prop_info[resonating[targ.index].active[1]].elements)
+            magic_burst:text('[%s] (%s) %s':format(resonating[targ.index].active[1],L{add_color(a),add_color(b),add_color(c),add_color(d)}:concat(' '),timer))
             magic_burst:show()
         else
             magic_burst:hide()
@@ -288,13 +288,10 @@ function do_stuff()
             return
         end
         if not resonating[targ.index].disp_info then
-            resonating[targ.index].disp_info = not resonating[targ.index].closed and check_results(resonating[targ.index]) or ''
+            resonating[targ.index].disp_info = check_results(resonating[targ.index])
             if not resonating[targ.index].chain then
-                resonating[targ.index].props = L{}
-                for k,v in ipairs(resonating[targ.index].active) do
-                    resonating[targ.index].props:append('[%s]':format(add_color(v)))
-                end
-                resonating[targ.index].props = resonating[targ.index].props:concat(' ')
+                local a,b,c = table.unpack(resonating[targ.index].active)
+                resonating[targ.index].props = L{add_color(a),add_color(b),add_color(c)}
             else
                 resonating[targ.index].props = '[Chainbound Lv.%d]':format(resonating[targ.index].chain)
             end
@@ -314,49 +311,27 @@ function loop()
 	end
 end
 
-local function get_bit_packed(dat_string, start, stop) -- Byrth Battlemod
-    dat_string = dat_string:sub(5)
-    local newval = 0   
-    local c_count = math.ceil(stop/8)
-    while c_count >= math.ceil((start+1)/8) do
-        local cur_val = dat_string:byte(c_count)
-        local scal = 256
-        if c_count == math.ceil(stop/8) then
-            cur_val = cur_val%(2^((stop-1)%8+1))
-        end
-        if c_count == math.ceil((start+1)/8) then
-            cur_val = math.floor(cur_val/(2^(start%8)))
-            scal = 2^(8-start%8)
-        end
-        newval = newval*scal + cur_val
-        c_count = c_count - 1
-    end
-    return newval
-end
-
 function apply_props(data,actor,ability)
-    local mob = windower.ffxi.get_mob_by_id(get_bit_packed(data,118,150))
+    local mob = windower.ffxi.get_mob_by_id(data:unpack('b32',19,7))
     if not mob or not mob.is_npc or mob.hpp == 0 then return end
-    local message = get_bit_packed(data,198,208)
-    local skillchain = skillchains[get_bit_packed(data,267,277)]
+    local message = data:unpack('b10',29,7)
+    local skillchain = skillchains[data:unpack('b10',38,4)]
     if skillchain then
         local step = (resonating[mob.index] and resonating[mob.index].step or 1) + 1
-        local closed = resonating[mob.index] and (check_lvl(resonating[mob.index].active,skillchain) == 4 or step >= 6)
+        local closed = resonating[mob.index] and (check_lvl(resonating[mob.index].active,ability.skillchain,skillchain) == 4 or step >= 6)
         resonating[mob.index] = {en=ability.en,active={skillchain},ts=os.time(),dur=11-step,wait=3,closed=closed,step=step}
     elseif L{2,110,161,162,185,187,317}:contains(message) then
         resonating[mob.index] = {en=ability.en,active=ability.aeonic and aeonic_weapon and aeonic_prop(ability,actor) or ability.skillchain,ts=os.time(),dur=10,wait=3,step=1}
     elseif message == 529 then
-        resonating[mob.index] = {en=ability.en,active=ability.skillchain,ts=os.time(),dur=ability.dur,wait=0,step=1,chain=get_bit_packed(data,181,198)}
+        resonating[mob.index] = {en=ability.en,active=ability.skillchain,ts=os.time(),dur=ability.dur,wait=0,step=1,chain=data:unpack('b17',27,6)}
     end
 end
 
 windower.register_event('incoming chunk', function(id,data)
-    if id == 0x028 then
-        local actor = get_bit_packed(data,8,40)
-        local category = get_bit_packed(data,50,54)
-        local param = get_bit_packed(data,54,70)
+    if id == 0x28 then
+        local actor,targets,category,param = data:unpack('Ib10b4b16',6)
         if category == 4 and skills[4][param] then
-            if get_bit_packed(data,239,240) == 1 or chain_ability[1][actor] or chain_ability[2][actor] then
+            if data:unpack('q',34,8) or chain_ability[1][actor] or chain_ability[2][actor] then
                 chain_ability[1][actor] = nil
                 apply_props(data,actor,skills[category][param])
             end
@@ -371,15 +346,13 @@ windower.register_event('incoming chunk', function(id,data)
                 create_timer(60,1,actor)
             end
         end
-    elseif id == 0x050 and data:byte(6) == 0 then
+    elseif id == 0x50 and data:byte(6) == 0 then
         check_weapon(data:byte(7),data:byte(5))
     end
 end)
 
-windower.register_event('addon command', function(...)
-    local commands = {...}
-    for x=1,#commands do commands[x] = commands[x]:lower() end
-    if commands[1] == 'move' then
+windower.register_event('addon command', function(cmd)
+    if cmd:lower() == 'move' then
         visible = true
         if not skill_props:visible() then
             skill_props:update({disp_info='\n      --- SkillChains ---\n\n\n\nClick and drag to move display.'})
@@ -391,20 +364,19 @@ windower.register_event('addon command', function(...)
         visible = false
         skill_props:hide()
         magic_burst:hide()
-   elseif settings.Show[commands[1]] then
+    elseif settings.Show[cmd:lower()] then
         local main_job = windower.ffxi.get_player().main_job
-        if not settings.Show[commands[1]]:find(main_job) then
-            settings.Show[commands[1]]:append(main_job)
+        if not settings.Show[cmd:lower()]:find(main_job) then
+            settings.Show[cmd:lower()]:append(main_job)
         else
-            local key = settings.Show[commands[1]]:find(main_job)
+            local key = settings.Show[cmd:lower()]:find(main_job)
             if key then
-                settings.Show[commands[1]]:remove(key)
+                settings.Show[cmd:lower()]:remove(key)
             end
         end
-        initialize(skill_props,settings)
-        windower.add_to_chat(207, '%s: %s.':format(commands[1],settings.Show[commands[1]]:find(main_job) and 'TRUE' or 'FALSE'))
-    elseif commands[1] == 'save' then
         config.save(settings, 'all')
+        initialize(skill_props,settings)
+        windower.add_to_chat(207, '%s: %s.':format(cmd:lower(),settings.Show[cmd:lower()]:find(main_job) and 'TRUE' or 'FALSE'))
     end
 end)
 
