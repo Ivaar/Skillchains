@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar, contributors: Sebyg666, Sammeh'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.1.5.2'
+_addon.version = '2.1.5.3'
 _addon.updated = '2017.11.12'
 
 require('luau')
@@ -49,7 +49,7 @@ default = {
         },
     display = {text={size=12,font='Consolas'},pos={x=0,y=20},},--bg={visible=false}},
     }
-    
+
 settings = config.load(default)
 skill_props = texts.new('',settings.display,settings)
 setting = {burst,weapon,ability}
@@ -90,10 +90,8 @@ skillchains = L{
     }
 
 colors = {
-    ['Radiance'] = '\\cs(255,255,255)',
     ['Light'] = '\\cs(255,255,255)',
-    ['Impaction'] = '\\cs(255,0,255)',
-    ['Lightning'] = '\\cs(255,0,255)',
+    ['Radiance'] = '\\cs(255,255,255)',
     ['Dark'] = '\\cs(0,0,204)',
     ['Darkness'] = '\\cs(0,0,204)',
     ['Umbra'] = '\\cs(0,0,204)',
@@ -113,6 +111,8 @@ colors = {
     ['Fusion'] = '\\cs(255,102,102)',
     ['Liquefaction'] = '\\cs(255,0,0)',
     ['Fire'] = '\\cs(255,0,0)',
+    ['Impaction'] = '\\cs(255,0,255)',
+    ['Lightning'] = '\\cs(255,0,255)',
     }
 
 prop_info = {
@@ -135,26 +135,24 @@ prop_info = {
     }
 
 initialize = function(text, settings)
-    local player = windower.ffxi.get_player()
+    local main_job = windower.ffxi.get_player().main_job
+    if not main_job then return end
     local properties = L{}
-    if settings.Show.timer:find(player.main_job) then
+    if settings.Show.timer:find(main_job) then
         properties:append('${timer}')
     end
-    if settings.Show.step:find(player.main_job) then
+    if settings.Show.step:find(main_job) then
         properties:append('Step: ${step} >> ${en}')
     end
-    if settings.Show.props:find(player.main_job) then
+    if settings.Show.props:find(main_job) then
         properties:append('${props} ${elements}')
     end
     properties:append('${disp_info}')
     text:clear()
     text:append(properties:concat('\n'))
-    setting.burst = settings.Show.burst:find(player.main_job) and true or false
-    setting.weapon = settings.Show.weapon:find(player.main_job) and true or false
-    setting.ability = settings.Show.ability:find(player.main_job) and true or false
-    setting.blu = player.main_job == 'BLU' and settings.Show.ability:find('BLU') and true or false
-    setting.sch = player.main_job == 'SCH' and player.main_job_level >= 87 and settings.Show.ability:find('SCH') and true or false
-    setting.pet = L{'SMN','BST'}:contains(player.main_job) and settings.Show.ability:find(player.main_job) and true or false
+    setting.burst = settings.Show.burst:find(main_job) and true or false
+    setting.weapon = settings.Show.weapon:find(main_job) and true or false
+    setting.ability = settings.Show.ability:find(main_job) and (L{'SMN','BST'}:contains(main_job) and 'PET' or main_job) or ''
 end
 skill_props:register_event('reload', initialize)
 
@@ -206,20 +204,6 @@ function aeonic_prop(ability,actor,self)
     return {ability.skillchain[1],ability.skillchain[2],ability.aeonic}
 end
 
-function check_lvl(old,new,prop)
-    for k=1,#old do
-        for x=1,#new do
-            if prop_info[old[k]].props[new[x]] then
-                if old[k] == new[x] and prop_info[prop].lvl == 3 then
-                    return 4
-                end
-                break
-            end
-        end
-    end
-    return prop_info[prop].lvl
-end
-
 function check_props(old,new)
     for k=1,#old do
         for x=1,#new do
@@ -259,11 +243,11 @@ end
 
 function check_results(reson)
     local t = {[1]=L{},[2]=L{}}
-    if setting.sch then
-        t[1] = add_skills({1,2,3,4,5,6,7,8},reson.active,20) 
-    elseif setting.job == 'BLU' then
+    if setting.ability == 'SCH' then
+        t[1] = add_skills({1,2,3,4,5,6,7,8},reson.active,20)
+    elseif setting.ability == 'BLU' then
         t[1] = add_skills(windower.ffxi.get_mjob_data().spells,reson.active,4)
-    elseif setting.pet and windower.ffxi.get_mob_by_target('pet') then
+    elseif setting.ability == 'PET' and windower.ffxi.get_mob_by_target('pet') then
         t[1] = add_skills(windower.ffxi.get_abilities().job_abilities,reson.active,13)
     end
     if setting.weapon then
@@ -323,13 +307,7 @@ function do_stuff()
         skill_props:hide()
     end
 end
-
-function loop()
-    while doloop do
-        do_stuff()
-        coroutine.sleep(0.1)
-    end
-end
+do_stuff:loop(0.1)
 
 function apply_props(data,actor,ability)
     local mob_id = data:unpack('b32',19,7)
@@ -398,7 +376,6 @@ windower.register_event('incoming chunk', function(id,data)
     elseif id == 0x50 and data:byte(6) == 0 then
         check_weapon(data:byte(7),data:byte(5))
     end
-
 end)
 
 windower.register_event('addon command', function(cmd)
@@ -431,13 +408,9 @@ windower.register_event('addon command', function(cmd)
 end)
 
 windower.register_event('load', function()
-    if not windower.ffxi.get_info().logged_in then
-        return
-    end
+    if not windower.ffxi.get_info().logged_in then return end
     local equip = windower.ffxi.get_items('equipment')
     check_weapon(equip.main_bag,equip.main)
-    doloop = true
-    loop()
 end)
 
 windower.register_event('job change', function()
