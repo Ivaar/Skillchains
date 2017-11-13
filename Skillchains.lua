@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar, contributors: Sebyg666, Sammeh'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.1.5.1'
-_addon.updated = '2017.11.11'
+_addon.version = '2.1.5.2'
+_addon.updated = '2017.11.12'
 
 require('luau')
 require('pack')
@@ -53,7 +53,7 @@ default = {
 settings = config.load(default)
 skill_props = texts.new('',settings.display,settings)
 setting = {burst,weapon,ability}
-buffs = {}
+
 skillchains = L{
     [288] = 'Light',
     [289] = 'Darkness',
@@ -90,6 +90,7 @@ skillchains = L{
     }
 
 colors = {
+    ['Radiance'] = '\\cs(255,255,255)',
     ['Light'] = '\\cs(255,255,255)',
     ['Impaction'] = '\\cs(255,0,255)',
     ['Lightning'] = '\\cs(255,0,255)',
@@ -160,6 +161,7 @@ skill_props:register_event('reload', initialize)
 function reset()
     chain_ability = {[1]={},[2]={}}
     resonating = {}
+    buffs = S{}
 end
 reset()
 
@@ -189,7 +191,7 @@ function check_weapon(bag,ind)
 end
 
 function aeonic_am(step)
-    for k=1,#buffs do local v = buffs[k]
+    for v in buffs:it() do
         if v >= 270 and v <= 272 then
             return 273-v <= step
         end
@@ -221,8 +223,9 @@ end
 function check_props(old,new)
     for k=1,#old do
         for x=1,#new do
-            if prop_info[old[k]].props[new[x]] then
-                return prop_info[old[k]].props[new[x]]
+            local v = prop_info[old[k]].props[new[x]]
+            if v then
+                return {lvl=prop_info[v].lvl == 3 and v == new[x] and v == old[k] and 4 or prop_info[v].lvl,ele=v}
             end
         end
     end
@@ -242,9 +245,13 @@ function add_skills(abilities,active,cat,aeonic)
     local t = L{}
     for k=1,#abilities do local v = abilities[k]
         local ability = skills[cat][v]
-        local prop = ability and check_props(active,ability.aeonic and aeonic and aeonic_prop(ability,nil,true) or ability.skillchain)
+        local prop = ability and check_props(active,ability.aeonic and aeonic_prop(ability,nil,true) or ability.skillchain)
         if prop then
-            t:append({'%s >> Lv':format(ability.en:rpad(' ',15)),check_lvl(active,ability.skillchain,prop),add_color(aeonic and check_lvl(active,ability.skillchain,prop) == 4 and prop_info[prop].aeonic or prop)})
+            t:append({
+                '%s >> Lv':format(ability.en:rpad(' ',15)),
+                prop.lvl,
+                add_color(aeonic and prop.lvl == 4 and prop_info[prop.ele].aeonic or prop.ele)
+                })
         end
     end
     return table.sort(t, function(a, b) return a[2] > b[2] end)
@@ -329,6 +336,7 @@ function apply_props(data,actor,ability)
     local message = data:unpack('b10',29,7)
     local skillchain = skillchains[data:unpack('b10',38,4)]
     if skillchain then
+        local lvl = check_props(resonating[mob_id].active,ability.skillchain).lvl
         local step = (resonating[mob_id] and resonating[mob_id].step or 1) + 1
         resonating[mob_id] = {
             en=ability.en,
@@ -336,13 +344,13 @@ function apply_props(data,actor,ability)
             ts=os.time(),
             dur=11-step,
             wait=3,
-            closed=resonating[mob_id] and (check_lvl(resonating[mob_id].active,ability.skillchain,skillchain) == 4 or step >= 6),
+            closed=resonating[mob_id] and (lvl == 4 or step >= 6),
             step=step
             }
     elseif L{2,110,161,162,185,187,317}:contains(message) then
         resonating[mob_id] = {
             en=ability.en,
-            active=ability.aeonic and aeonic_weapon and aeonic_prop(ability,actor) or ability.skillchain,
+            active=ability.aeonic and aeonic_prop(ability,actor) or ability.skillchain,
             ts=os.time(),
             dur=10,
             wait=3,
@@ -380,9 +388,17 @@ windower.register_event('incoming chunk', function(id,data)
                 create_timer(60,1,actor)
             end
         end
+    elseif id == 0x029 then
+        local index,message = data:unpack('HH',23)
+        if message == 206 and index == windower.ffxi.get_mob_by_target('me').index then
+            buffs[data:unpack('I',13)] = false
+        end
+    elseif id == 0x063 and data:byte(5) == 0x09 then
+        buffs = S{data:unpack('H32',9)}
     elseif id == 0x50 and data:byte(6) == 0 then
         check_weapon(data:byte(7),data:byte(5))
     end
+
 end)
 
 windower.register_event('addon command', function(cmd)
@@ -412,14 +428,6 @@ windower.register_event('addon command', function(cmd)
         return
     end
     windower.add_to_chat(207, '%s: valid commands [save | move | burst | weapon | ability | props | step | timer]':format(_addon.name))
-end)
-
-windower.register_event('gain buff', function(buff_id)
-    buffs[buff_id] = true
-end)
-
-windower.register_event('lose buff', function(buff_id)
-    buffs[buff_id] = false
 end)
 
 windower.register_event('load', function()
