@@ -25,11 +25,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ]]
-_addon.author = 'Ivaar, contributors: Sebyg666, Sammeh'
+_addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.1.5.3'
-_addon.updated = '2017.11.12'
+_addon.version = '2.2017.11.13'
 
 require('luau')
 require('pack')
@@ -37,8 +36,6 @@ texts = require('texts')
 skills = require('skills')
 
 default = {
-    Aeonic=false,-- temporary setting when enabled adds aeonic properties to all merit weapon skills used by other players
-    Color = false,
     Show = {
         ability = L{'BST','SMN','SCH','BLU'},
         burst = L{'WHM','BLM','RDM','PLD','DRK','BST','BRD','NIN','SMN','BLU','SCH','GEO'},
@@ -47,7 +44,9 @@ default = {
         timer = L{'WAR','MNK','WHM','BLM','RDM','THF','PLD','DRK','BST','BRD','RNG','SAM','NIN','DRG','SMN','BLU','COR','PUP','DNC','SCH','GEO','RUN'},
         weapon = L{'WAR','MNK','WHM','BLM','RDM','THF','PLD','DRK','BST','BRD','RNG','SAM','NIN','DRG','SMN','BLU','COR','PUP','DNC','SCH','GEO','RUN'},
         },
-    display = {text={size=12,font='Consolas'},pos={x=0,y=20},},--bg={visible=false}},
+    aeonic=false,-- temporary setting when enabled adds aeonic properties to all merit weapon skills used by other players
+    color = false,
+    display = {text={size=12,font='Consolas'},pos={x=0,y=0},},--bg={visible=false}},
     }
 
 settings = config.load(default)
@@ -89,7 +88,7 @@ skillchains = L{
     [770] = 'Umbra',
     }
 
-colors = {
+colors = { -- Sammeh
     ['Light'] = '\\cs(255,255,255)',
     ['Radiance'] = '\\cs(255,255,255)',
     ['Dark'] = '\\cs(0,0,204)',
@@ -314,36 +313,14 @@ function apply_props(data,actor,ability)
     local message = data:unpack('b10',29,7)
     local skillchain = skillchains[data:unpack('b10',38,4)]
     if skillchain then
-        local lvl = check_props(resonating[mob_id].active,ability.skillchain).lvl
+        local prop = prop_info[skillchain].lvl == 3 and resonating[mob_id] and check_props(resonating[mob_id].active,ability.skillchain)
         local step = (resonating[mob_id] and resonating[mob_id].step or 1) + 1
-        resonating[mob_id] = {
-            en=ability.en,
-            active={skillchain},
-            ts=os.time(),
-            dur=11-step,
-            wait=3,
-            closed=resonating[mob_id] and (lvl == 4 or step >= 6),
-            step=step
-            }
+        local lvl = prop and prop.lvl or prop_info[skillchain].lvl
+        resonating[mob_id] = {en=ability.en,active={skillchain},ts=os.time(),dur=11-step,wait=3,closed=lvl==4 or step>=6,step=step}
     elseif L{2,110,161,162,185,187,317}:contains(message) then
-        resonating[mob_id] = {
-            en=ability.en,
-            active=ability.aeonic and aeonic_prop(ability,actor) or ability.skillchain,
-            ts=os.time(),
-            dur=10,
-            wait=3,
-            step=1
-            }
+        resonating[mob_id] = {en=ability.en,active=ability.aeonic and aeonic_prop(ability,actor) or ability.skillchain,ts=os.time(),dur=10,wait=3,step=1}
     elseif message == 529 then
-        resonating[mob_id] = {
-            en=ability.en,
-            active=ability.skillchain,
-            ts=os.time(),
-            dur=ability.dur,
-            wait=0,
-            step=1,
-            chain=data:unpack('b17',27,6)
-            }
+        resonating[mob_id] = {en=ability.en,active=ability.skillchain,ts=os.time(),dur=ability.dur,wait=0,step=1,chain=data:unpack('b17',27,6)}
     end
 end
 
@@ -401,10 +378,15 @@ windower.register_event('addon command', function(cmd)
         end
         config.save(settings, 'all')
         initialize(skill_props,settings)
-        windower.add_to_chat(207, '%s %s: %s.':format(job,cmd,key and 'TRUE' or 'FALSE'))
+        windower.add_to_chat(207, '%s: %s will no%s be displayed on %s.':format(_addon.name,cmd,key and 't' or 'w',job))
         return
     end
-    windower.add_to_chat(207, '%s: valid commands [save | move | burst | weapon | ability | props | step | timer]':format(_addon.name))
+    if type(settings[cmd]) == 'boolean' then
+        settings[cmd] = not settings[cmd]
+        windower.add_to_chat(207, '%s: %s %s':format(_addon.name,cmd,settings[cmd] and 'on' or 'off'))
+        return
+    end
+    windower.add_to_chat(207, '%s: valid commands [save|move|burst|weapon|ability|props|step|timer|color|aeonic]':format(_addon.name))
 end)
 
 windower.register_event('load', function()
