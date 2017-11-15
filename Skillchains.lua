@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.2017.11.13'
+_addon.version = '2.2017.11.14'
 
 require('luau')
 require('pack')
@@ -46,7 +46,7 @@ default = {
         },
     aeonic=false,-- temporary setting when enabled adds aeonic properties to all merit weapon skills used by other players
     color = false,
-    display = {text={size=12,font='Consolas'},pos={x=0,y=0},},--bg={visible=false}},
+    display = {text={size=12,font='Consolas'},pos={x=0,y=20},},--bg={visible=false}},
     }
 
 settings = config.load(default)
@@ -133,25 +133,27 @@ prop_info = {
     Impaction = {elements=L{'Lightning'},props={Liquefaction='Liquefaction',Detonation='Detonation'},lvl=1},
     }
 
-initialize = function(text, settings)
-    local main_job = windower.ffxi.get_player().main_job
-    if not main_job then return end
+initialize = function(text, settings, job)
+    setting.job = job or windower.ffxi.get_info().logged_in and windower.ffxi.get_player().main_job
+    if not setting.job then
+        return
+    end
     local properties = L{}
-    if settings.Show.timer:find(main_job) then
+    if settings.Show.timer:find(setting.job) then
         properties:append('${timer}')
     end
-    if settings.Show.step:find(main_job) then
+    if settings.Show.step:find(setting.job) then
         properties:append('Step: ${step} >> ${en}')
     end
-    if settings.Show.props:find(main_job) then
+    if settings.Show.props:find(setting.job) then
         properties:append('${props} ${elements}')
     end
     properties:append('${disp_info}')
     text:clear()
     text:append(properties:concat('\n'))
-    setting.burst = settings.Show.burst:find(main_job) and true or false
-    setting.weapon = settings.Show.weapon:find(main_job) and true or false
-    setting.ability = settings.Show.ability:find(main_job) and (L{'SMN','BST'}:contains(main_job) and 'PET' or main_job) or ''
+    setting.burst = settings.Show.burst:find(setting.job) and true or false
+    setting.weapon = settings.Show.weapon:find(setting.job) and true or false
+    setting.ability = settings.Show.ability:find(setting.job) and (L{'SMN','BST'}:contains(setting.job) and 'pet' or setting.job) or ''
 end
 skill_props:register_event('reload', initialize)
 
@@ -208,7 +210,7 @@ function check_props(old,new)
         for x=1,#new do
             local v = prop_info[old[k]].props[new[x]]
             if v then
-                return {lvl=prop_info[v].lvl == 3 and v == new[x] and v == old[k] and 4 or prop_info[v].lvl,ele=v}
+                return {ele=v,lvl=prop_info[v].lvl == 3 and v == new[x] and v == old[k] and 4 or prop_info[v].lvl}
             end
         end
     end
@@ -246,7 +248,7 @@ function check_results(reson)
         t[1] = add_skills({1,2,3,4,5,6,7,8},reson.active,20)
     elseif setting.ability == 'BLU' then
         t[1] = add_skills(windower.ffxi.get_mjob_data().spells,reson.active,4)
-    elseif setting.ability == 'PET' and windower.ffxi.get_mob_by_target('pet') then
+    elseif setting.ability == 'pet' and windower.ffxi.get_mob_by_target(setting.ability) then
         t[1] = add_skills(windower.ffxi.get_abilities().job_abilities,reson.active,13)
     end
     if setting.weapon then
@@ -369,16 +371,15 @@ windower.register_event('addon command', function(cmd)
         return
     end
    if settings.Show[cmd] then
-        local job = windower.ffxi.get_player().main_job
-        local key = settings.Show[cmd]:find(job)
+        local key = settings.Show[cmd]:find(setting.job)
         if not key then
-            settings.Show[cmd]:append(job)
+            settings.Show[cmd]:append(setting.job)
         else
             settings.Show[cmd]:remove(key)
         end
         config.save(settings, 'all')
         initialize(skill_props,settings)
-        windower.add_to_chat(207, '%s: %s will no%s be displayed on %s.':format(_addon.name,cmd,key and 't' or 'w',job))
+        windower.add_to_chat(207, '%s: %s will no%s be displayed on %s.':format(_addon.name,cmd,key and 't' or 'w',setting.job))
         return
     end
     if type(settings[cmd]) == 'boolean' then
@@ -390,13 +391,18 @@ windower.register_event('addon command', function(cmd)
 end)
 
 windower.register_event('load', function()
-    if not windower.ffxi.get_info().logged_in then return end
+    if not windower.ffxi.get_info().logged_in then
+        return
+    end
     local equip = windower.ffxi.get_items('equipment')
     check_weapon(equip.main_bag,equip.main)
 end)
 
-windower.register_event('job change', function()
-    initialize(skill_props,settings)
+windower.register_event('job change', function(job)
+    local job = res.jobs[job].english_short
+    if job ~= setting.job then
+        initialize(skill_props,settings,job)
+    end
 end)
 
 windower.register_event('zone change','logout', reset)
