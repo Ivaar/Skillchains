@@ -28,52 +28,52 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.2017.11.15'
+_addon.version = '2.2017.11.16'
 
 require('luau')
 require('pack')
 texts = require('texts')
 skills = require('skills')
 
-_static = L{'WAR','MNK','WHM','BLM','RDM','THF','PLD','DRK','BST','BRD','RNG','SAM','NIN','DRG','SMN','BLU','COR','PUP','DNC','SCH','GEO','RUN'}
+_static = S{'WAR','MNK','WHM','BLM','RDM','THF','PLD','DRK','BST','BRD','RNG','SAM','NIN','DRG','SMN','BLU','COR','PUP','DNC','SCH','GEO','RUN'}
 
 default = {
-    Show = {ability=L{'BST','SMN','SCH','BLU'}, burst=_static, props=_static, step=_static, timer=_static, weapon=_static},
+    Show = {ability=S{'BST','SMN','SCH','BLU'}, burst=_static, props=_static, step=_static, timer=_static, weapon=_static},
     UpdateFrequency = 0.1,
     aeonic = false,
     color = false,
-    display = {text={size=12, font='Consolas'},pos={x=0,y=0}},--,bg={visible=false}},
+    display = {text={size=12,font='Consolas'},pos={x=0,y=0}},--,bg={visible=false}},
     }
 
 settings = config.load(default)
 skill_props = texts.new('',settings.display,settings)
 setting = {burst,weapon,ability,job}
-ability_dur = L{[93]=40,[94]=30,[317]=60}
+ability_dur = {[93]=40,[94]=30,[317]=60}
 
 colors = { -- Sammeh
-    ['Light'] = '\\cs(255,255,255)',
-    ['Radiance'] = '\\cs(255,255,255)',
-    ['Dark'] = '\\cs(0,0,204)',
-    ['Darkness'] = '\\cs(0,0,204)',
-    ['Umbra'] = '\\cs(0,0,204)',
-    ['Gravitation'] = '\\cs(102,51,0)',
-    ['Fragmentation'] = '\\cs(250,156,247)',
-    ['Distortion'] = '\\cs(51,153,255)',
-    ['Compression'] = '\\cs(0,0,204)',
-    ['Induration'] = '\\cs(0,255,255)',
-    ['Ice'] = '\\cs(0,255,255)',
-    ['Reverberation'] = '\\cs(0,0,255)',
-    ['Water'] = '\\cs(0,0,255)',
-    ['Transfixion'] = '\\cs(255,255,255)',
-    ['Scission'] = '\\cs(153,76,0)',
-    ['Earth'] = '\\cs(153,76,0)',
-    ['Detonation'] = '\\cs(102,255,102)',
-    ['Wind'] = '\\cs(102,255,102)',
-    ['Fusion'] = '\\cs(255,102,102)',
-    ['Liquefaction'] = '\\cs(255,0,0)',
-    ['Fire'] = '\\cs(255,0,0)',
-    ['Impaction'] = '\\cs(255,0,255)',
-    ['Lightning'] = '\\cs(255,0,255)',
+    Light = '\\cs(255,255,255)',
+    Radiance = '\\cs(255,255,255)',
+    Dark = '\\cs(0,0,204)',
+    Darkness = '\\cs(0,0,204)',
+    Umbra = '\\cs(0,0,204)',
+    Gravitation = '\\cs(102,51,0)',
+    Fragmentation = '\\cs(250,156,247)',
+    Distortion = '\\cs(51,153,255)',
+    Compression = '\\cs(0,0,204)',
+    Induration = '\\cs(0,255,255)',
+    Ice = '\\cs(0,255,255)',
+    Reverberation = '\\cs(0,0,255)',
+    Water = '\\cs(0,0,255)',
+    Transfixion = '\\cs(255,255,255)',
+    Scission = '\\cs(153,76,0)',
+    Earth = '\\cs(153,76,0)',
+    Detonation = '\\cs(102,255,102)',
+    Wind = '\\cs(102,255,102)',
+    Fusion = '\\cs(255,102,102)',
+    Liquefaction = '\\cs(255,0,0)',
+    Fire = '\\cs(255,0,0)',
+    Impaction = '\\cs(255,0,255)',
+    Lightning = '\\cs(255,0,255)',
     }
 
 skillchains = L{
@@ -136,29 +136,34 @@ initialize = function(text, settings)
         return
     end
     local properties = L{}
-    if settings.Show.timer:find(setting.job) then
+    if settings.Show.timer[setting.job] then
         properties:append('${timer}')
     end
-    if settings.Show.step:find(setting.job) then
+    if settings.Show.step[setting.job] then
         properties:append('Step: ${step} >> ${en}')
     end
-    if settings.Show.props:find(setting.job) then
+    if settings.Show.props[setting.job] then
         properties:append('${props} ${elements}')
     end
     properties:append('${disp_info}')
     text:clear()
     text:append(properties:concat('\n'))
-    setting.burst = settings.Show.burst:find(setting.job) and true or false
-    setting.weapon = settings.Show.weapon:find(setting.job) and true or false
-    setting.ability = settings.Show.ability:find(setting.job) and (L{'SMN','BST'}:contains(setting.job) and 'pet' or setting.job) or ''
+    setting.burst = settings.Show.burst[setting.job]
+    setting.weapon = settings.Show.weapon[setting.job]
+    setting.ability = settings.Show.ability[setting.job] and (S{'SMN','BST'}:contains(setting.job) and 'pet' or setting.job) or ''
 end
 skill_props:register_event('reload', initialize)
 
-function check_weapon(bag,ind)
-    local main_weapon = windower.ffxi.get_items(bag,ind).id
-    aeonic_weapon = skills.aeonic[main_weapon]
-    if main_weapon == 0 then
-        weapon_check = coroutine.schedule(check_weapon-{bag,ind}, 20)
+function check_weapon(bag, ind)
+    if setting.weapon then
+        local main_weapon = windower.ffxi.get_items(bag,ind).id
+        if main_weapon == 0 then
+            return coroutine.schedule(check_weapon-{bag,ind}, 20)
+        end
+        aeonic_weapon = L{22117,20977,20890,20594,21485,21082,20695,21694,21753,21147,20515,20935,21025,20843,20837}:contains(main_weapon)
+        --weapon_skills = update_abilities(windower.ffxi.get_abilities().weapon_skills,3)
+    --else
+        --weapon_skills = nil
     end
 end
 
@@ -170,20 +175,20 @@ function aeonic_am(step)
     end
 end
 
-function aeonic_prop(ability,actor,self)
-    self = self or windower.ffxi.get_mob_by_target('me').id == actor
-    if self and not aeonic_weapon or not self and not settings.Aeonic then
+function aeonic_prop(ability, actor)
+    self = not actor or windower.ffxi.get_mob_by_target('me').id == actor
+    if self and not aeonic_weapon or not self and not settings.aeonic then
        return ability.skillchain
     end
     return {ability.skillchain[1],ability.skillchain[2],ability.aeonic}
 end
 
-function check_props(old,new)
+function check_props(old, new)
     for k=1,#old do
         for x=1,#new do
             local v = prop_info[old[k]].props[new[x]]
             if v then
-                return {ele=v,lvl=prop_info[v].lvl == 3 and v == new[x] and v == old[k] and 4 or prop_info[v].lvl}
+                return v,prop_info[v].lvl == 3 and v == new[x] and v == old[k] and 4 or prop_info[v].lvl
             end
         end
     end
@@ -196,16 +201,16 @@ function add_color(str)
     return str
 end
 
-function add_skills(abilities,active,cat,aeonic)
+function add_skills(abilities, active, cat, aeonic)
     local t = L{}
     for k=1,#abilities do local v = abilities[k]
         local ability = skills[cat][v]
-        local prop = ability and check_props(active,ability.aeonic and aeonic_prop(ability,nil,true) or ability.skillchain)
+        local prop,lvl = check_props(active,ability.aeonic and aeonic_prop(ability) or ability.skillchain)
         if prop then
-            t:append({'%s >> Lv':format(ability.en:rpad(' ',15)), prop.lvl, add_color(aeonic and prop.lvl == 4 and prop_info[prop.ele].aeonic or prop.ele)})
+            t:append({ability.en:rpad(' ',15),'>> Lv',lvl, add_color(aeonic and lvl == 4 and prop_info[prop].aeonic or prop)})
         end
     end
-    return table.sort(t, function(a, b) return a[2] > b[2] end)
+    return table.sort(t, function(a, b) return a[3] > b[3] end)
 end
 
 function check_results(reson)
@@ -274,15 +279,19 @@ function do_stuff()
         skill_props:hide()
     end
 end
-do_stuff:loop(settings.UpdateFrequency)
 
-function apply_props(data,actor,ability)
+function apply_props(data, actor, ability)
     local mob_id = data:unpack('b32',19,7)
     local skillchain = skillchains[data:unpack('b10',38,4)]
     if skillchain then
-        local prop = prop_info[skillchain].lvl == 3 and resonating[mob_id] and check_props(resonating[mob_id].active,ability.skillchain)
+        local prop,lvl = prop_info[skillchain].lvl == 3 and resonating[mob_id] and check_props(resonating[mob_id].active,ability.skillchain)
         local step = (resonating[mob_id] and resonating[mob_id].step or 1) + 1
-        local lvl = prop and prop.lvl or prop_info[skillchain].lvl
+        local lvl = lvl or prop_info[skillchain].lvl
+        
+        if resonating[mob_id] and (not prop or prop ~= skillchain) then
+            print('%s: missing or incorrect properties: %s >> %s created %s':format(_addon.name,resonating[mob_id].en,ability.en,skillchain))
+        end
+        
         resonating[mob_id] = {en=ability.en,active={skillchain},ts=os.time(),dur=11-step,wait=3,closed=lvl==4 or step>=6,step=step}
     elseif L{2,110,161,162,185,187,317}:contains(data:unpack('b10',29,7)) then
         resonating[mob_id] = {en=ability.en,active=ability.aeonic and aeonic_prop(ability,actor) or ability.skillchain,ts=os.time(),dur=10,wait=3,step=1}
@@ -291,10 +300,10 @@ function apply_props(data,actor,ability)
     end
 end
 
-windower.register_event('incoming chunk', function(id,data)
+windower.register_event('incoming chunk', function(id, data)
     if id == 0x28 then
         local actor,targets,category,param = data:unpack('Ib10b4b16',6)
-        if category == 4 and skills[4][param] and (data:unpack('q',34,8) or chain_ability[actor]-os.time() > 0) then
+        if category == 4 and skills[4][param] and (data:unpack('q',34,8) or chain_ability[actor] and chain_ability[actor]-os.time() > 0) then
             apply_props(data,actor,skills[category][param])
         elseif skills[category] and skills[category][param] then
             apply_props(data,actor,skills[category][param])
@@ -310,7 +319,7 @@ windower.register_event('incoming chunk', function(id,data)
     end
 end)
 
-windower.register_event('addon command', function(cmd,...)
+windower.register_event('addon command', function(cmd, ...)
     cmd = cmd and cmd:lower()
     if cmd == 'move' then
         visible = true
@@ -321,24 +330,44 @@ windower.register_event('addon command', function(cmd,...)
             visible = false
             skill_props:hide()
         end
+    elseif cmd == 'save' then
+        local arg = ... and ...:lower() == 'all' and ...
+        config.save(settings, arg)
+        windower.add_to_chat(207, '%s: settings saved to %s character%s.':format(_addon.name,arg or 'current',arg and 's' or ''))
     elseif settings.Show[cmd] then
-        local key = settings.Show[cmd]:find(setting.job)
+        local key = settings.Show[cmd][setting.job]
         if not key then
-            settings.Show[cmd]:append(setting.job)
+            settings.Show[cmd]:add(setting.job)
         else
-            settings.Show[cmd]:remove(key)
+            settings.Show[cmd]:remove(setting.job)
         end
-        config.save(settings, 'all')
+        config.save(settings)
         config.reload(settings)
-        windower.add_to_chat(207, '%s: %s will no%s be displayed on %s.':format(_addon.name,cmd,key and 't' or 'w',setting.job))
+        windower.add_to_chat(207, '%s: %s info will no%s be displayed on %s.':format(_addon.name,cmd,key and ' longer' or 'w',setting.job))--'t' or 'w'
     elseif type(settings[cmd]) == 'boolean' then
         settings[cmd] = not settings[cmd]
         windower.add_to_chat(207, '%s: %s %s':format(_addon.name,cmd,settings[cmd] and 'on' or 'off'))
     elseif cmd == 'eval' then
         assert(loadstring(table.concat({...}, ' ')))()
     else
-        windower.add_to_chat(207, '%s: valid commands [save|move|burst|weapon|ability|props|step|timer|color|aeonic]':format(_addon.name))
+        windower.add_to_chat(207, '%s: valid commands [save | move | burst |weapon | ability | props | step | timer | color | aeonic]':format(_addon.name))
     end
+end)
+
+function reset()
+    chain_ability = {}
+    resonating = {}
+    buffs = S{}
+end
+windower.register_event('zone change', 'logout', reset)
+
+windower.register_event('load', function()
+    if windower.ffxi.get_info().logged_in then
+        local equip = windower.ffxi.get_items('equipment')
+        check_weapon(equip.main_bag,equip.main)
+    end
+    reset()
+    do_stuff:loop(settings.UpdateFrequency)
 end)
 
 windower.register_event('job change', function(job)
@@ -348,17 +377,3 @@ windower.register_event('job change', function(job)
         config.reload(settings)
     end
 end)
-
-windower.register_event('load', function()
-    if windower.ffxi.get_info().logged_in then
-        local equip = windower.ffxi.get_items('equipment')
-        check_weapon(equip.main_bag,equip.main)
-    end
-end)
-
-function reset()
-    chain_ability = {}
-    resonating = {}
-    buffs = S{}
-end
-windower.register_event('zone change','logout','load', reset)
