@@ -160,7 +160,7 @@ function check_weapon(bag, ind)
         if main_weapon == 0 then
             return coroutine.schedule(check_weapon-{bag,ind}, 20)
         end
-        aeonic_weapon = L{22117,20977,20890,20594,21485,21082,20695,21694,21753,21147,20515,20935,21025,20843,20837}:contains(main_weapon)
+        aeonic_weapon = L{22117,20977,20890,20594,21485,21082,20695,21694,21753,21147,20515,20935,21025,20843}:contains(main_weapon)
         --weapon_skills = update_abilities(windower.ffxi.get_abilities().weapon_skills,3)
     --else
         --weapon_skills = nil
