@@ -39,7 +39,7 @@ _static = S{'WAR','MNK','WHM','BLM','RDM','THF','PLD','DRK','BST','BRD','RNG','S
 
 default = {
     Show = {ability=S{'BST','SMN','SCH','BLU'}, burst=_static, props=_static, step=_static, timer=_static, weapon=_static},
-    UpdateFrequency = 0.1,
+    UpdateFrequency = 0.2,
     aeonic = false,
     color = false,
     display = {text={size=12,font='Consolas'},pos={x=0,y=0}},--,bg={visible=false}},
