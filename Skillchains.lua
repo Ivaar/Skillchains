@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.2017.11.16'
+_addon.version = '2.2017.11.17'
 
 require('luau')
 require('pack')
@@ -158,10 +158,12 @@ function check_weapon(bag, ind)
     if setting.weapon then
         local main_weapon = windower.ffxi.get_items(bag,ind).id
         if main_weapon == 0 then
-            return coroutine.schedule(check_weapon-{bag,ind}, 20)
+            check_weapon = not check_weapon and coroutine.schedule(update_weapon-{bag,ind}, 20)
+            return
         end
         aeonic_weapon = L{22117,20977,20890,20594,21485,21082,20695,21694,21753,21147,20515,20935,21025,20843}:contains(main_weapon)
         --weapon_skills = update_abilities(windower.ffxi.get_abilities().weapon_skills,3)
+        coroutine.close(check_weapon) weapon_check = nil
     --else
         --weapon_skills = nil
     end
@@ -205,7 +207,7 @@ function add_skills(abilities, active, cat, aeonic)
     local t = L{}
     for k=1,#abilities do local v = abilities[k]
         local ability = skills[cat][v]
-        local prop,lvl = check_props(active,ability.aeonic and aeonic_prop(ability) or ability.skillchain)
+        local prop,lvl = check_props(active, #active <= 3 and skill[k].skillchain or {skill[k].skillchain[1]})
         if prop then
             t:append({ability.en:rpad(' ',15),'>> Lv',lvl, add_color(aeonic and lvl == 4 and prop_info[prop].aeonic or prop)})
         end
@@ -354,26 +356,37 @@ windower.register_event('addon command', function(cmd, ...)
     end
 end)
 
+windower.register_event('job change', function(job)
+    job = res.jobs:with('id', job).english_short
+    if job ~= setting.job then
+        setting.job = job
+        config.reload(settings)
+    end
+end)
+
+windower.register_event('unload', function()
+    coroutine.close(weapon_check)
+    coroutine.close(do_loop)
+end)
+
 function reset()
     chain_ability = {}
     resonating = {}
     buffs = S{}
 end
-windower.register_event('zone change', 'logout', reset)
+windower.register_event('zone change', reset)
 
 windower.register_event('load', function()
     if windower.ffxi.get_info().logged_in then
         local equip = windower.ffxi.get_items('equipment')
-        check_weapon(equip.main_bag,equip.main)
+        update_weapon(equip.main_bag, equip.main)
     end
     reset()
-    do_stuff:loop(settings.UpdateFrequency)
+    do_loop = do_stuff:loop(settings.UpdateFrequency)
 end)
 
-windower.register_event('job change', function(job)
-    local job = res.jobs[job].english_short
-    if job ~= setting.job then
-        setting.job = job
-        config.reload(settings)
-    end
+windower.register_event('logout', function()
+    coroutine.close(weapon_check) weapon_check = nil
+    setting = {}
+    reset()
 end)
