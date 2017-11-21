@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.2017.11.17'
+_addon.version = '2.2017.11.20'
 
 require('luau')
 require('pack')
@@ -158,7 +158,7 @@ function check_weapon(bag, ind)
     if setting.weapon then
         local main_weapon = windower.ffxi.get_items(bag,ind).id
         if main_weapon == 0 then
-            check_weapon = not check_weapon and coroutine.schedule(update_weapon-{bag,ind}, 20)
+            check_weapon = not check_weapon and coroutine.schedule(check_weapon-{bag,ind}, 20)
             return
         end
         aeonic_weapon = L{22117,20977,20890,20594,21485,21082,20695,21694,21753,21147,20515,20935,21025,20843}:contains(main_weapon)
@@ -207,7 +207,7 @@ function add_skills(abilities, active, cat, aeonic)
     local t = L{}
     for k=1,#abilities do local v = abilities[k]
         local ability = skills[cat][v]
-        local prop,lvl = check_props(active, #active <= 3 and skill[k].skillchain or {skill[k].skillchain[1]})
+        local prop,lvl = check_props(active, #active <= 3 and ability.skillchain or {ability.skillchain[1]})
         if prop then
             t:append({ability.en:rpad(' ',15),'>> Lv',lvl, add_color(aeonic and lvl == 4 and prop_info[prop].aeonic or prop)})
         end
@@ -379,7 +379,7 @@ windower.register_event('zone change', reset)
 windower.register_event('load', function()
     if windower.ffxi.get_info().logged_in then
         local equip = windower.ffxi.get_items('equipment')
-        update_weapon(equip.main_bag, equip.main)
+        check_weapon(equip.main_bag, equip.main)
     end
     reset()
     do_loop = do_stuff:loop(settings.UpdateFrequency)
