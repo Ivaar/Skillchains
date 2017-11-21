@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.2017.11.20'
+_addon.version = '2.2017.11.20.1'
 
 require('luau')
 require('pack')
@@ -158,12 +158,12 @@ function check_weapon(bag, ind)
     if setting.weapon then
         local main_weapon = windower.ffxi.get_items(bag,ind).id
         if main_weapon == 0 then
-            check_weapon = not check_weapon and coroutine.schedule(check_weapon-{bag,ind}, 20)
+            weapon_check = not weapon_check and coroutine.schedule(check_weapon-{bag,ind}, 20)
             return
         end
         aeonic_weapon = L{22117,20977,20890,20594,21485,21082,20695,21694,21753,21147,20515,20935,21025,20843}:contains(main_weapon)
         --weapon_skills = update_abilities(windower.ffxi.get_abilities().weapon_skills,3)
-        coroutine.close(check_weapon) weapon_check = nil
+        coroutine.close(weapon_check) weapon_check = nil
     --else
         --weapon_skills = nil
     end
