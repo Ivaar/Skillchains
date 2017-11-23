@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.2017.11.20.1'
+_addon.version = '2.2017.11.22'
 
 require('luau')
 require('pack')
@@ -287,13 +287,12 @@ function apply_props(data, actor, ability)
     local skillchain = skillchains[data:unpack('b10',38,4)]
     if skillchain then
         local prop,lvl = prop_info[skillchain].lvl == 3 and resonating[mob_id] and check_props(resonating[mob_id].active,ability.skillchain)
+        --local prop,lvl = resonating[mob_id] and check_props(resonating[mob_id].active,ability.skillchain)
+        --if resonating[mob_id] and (not prop or prop ~= skillchain) then
+        --    print('%s: missing or incorrect properties: %s >> %s created %s':format(_addon.name,resonating[mob_id].en,ability.en,skillchain))
+        --end
         local step = (resonating[mob_id] and resonating[mob_id].step or 1) + 1
         local lvl = lvl or prop_info[skillchain].lvl
-        
-        if resonating[mob_id] and (not prop or prop ~= skillchain) then
-            print('%s: missing or incorrect properties: %s >> %s created %s':format(_addon.name,resonating[mob_id].en,ability.en,skillchain))
-        end
-        
         resonating[mob_id] = {en=ability.en,active={skillchain},ts=os.time(),dur=11-step,wait=3,closed=lvl==4 or step>=6,step=step}
     elseif L{2,110,161,162,185,187,317}:contains(data:unpack('b10',29,7)) then
         resonating[mob_id] = {en=ability.en,active=ability.aeonic and aeonic_prop(ability,actor) or ability.skillchain,ts=os.time(),dur=10,wait=3,step=1}
