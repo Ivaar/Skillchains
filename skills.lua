@@ -27,8 +27,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ]]
 local skills = {}
 
-local skills = {}
-
 skills[3] = {
     [1] = {en='Combo',skillchain={'Impaction'}},
     [2] = {en='Shoulder Tackle',skillchain={'Reverberation','Impaction'}},
