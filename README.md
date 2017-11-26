@@ -8,6 +8,7 @@ along with a list of weapon skills that can skillchain based on the weapon you h
 
 //sc save    -- saves current settings to ALL characters.
 
+//sc color    -- colorize properties and elements
 
 The following commands allow you to hide/show the display information, they are saved on a per job basis.
 
@@ -24,7 +25,5 @@ The following commands allow you to hide/show the display information, they are 
 //sc timer        -- skillchain window timer.
 
 //sc step         -- current weaponskill step information.
-
-//sc color    -- colorize properties and elements 
 
 More settings related to text object can be found within the settings.xml, generated on addon load
