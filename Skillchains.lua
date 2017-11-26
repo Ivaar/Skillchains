@@ -286,7 +286,7 @@ function apply_props(data, actor, ability)
     local mob_id = data:unpack('b32',19,7)
     local skillchain = skillchains[data:unpack('b10',38,4)]
     if skillchain then
-        local lvl = prop_info[skillchain].lvl == 3 and resonating[mob_id] and check_props(resonating[mob_id].active,aeonic_prop(ability)) or prop_info[skillchain].lvl
+        local lvl = prop_info[skillchain].lvl == 3 and resonating[mob_id] and check_props(resonating[mob_id].active,aeonic_prop(ability,actor)) or prop_info[skillchain].lvl
         local step = (resonating[mob_id] and resonating[mob_id].step or 1) + 1
         resonating[mob_id] = {en=ability.en,active={skillchain},ts=os.time(),dur=11-step,wait=3,closed=lvl == 4 or step > 5,step=step}
     elseif L{2,110,161,162,185,187,317}:contains(data:unpack('b10',29,7)) then
