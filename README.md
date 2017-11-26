@@ -11,7 +11,9 @@ along with a list of weapon skills that can skillchain based on the weapon you h
 
 The following commands allow you to hide/show the display information, they are saved on a per job basis.
 
-//sc ability      -- sch immanence, blue magic spells and pet skills.
+//sc spell      -- sch immanence and blue magic spells.
+
+//sc pet      -- smn and bst pet skills.
 
 //sc weapon       -- weapon skills.
 
@@ -22,5 +24,7 @@ The following commands allow you to hide/show the display information, they are 
 //sc timer        -- skillchain window timer.
 
 //sc step         -- current weaponskill step information.
+
+//sc color    -- colorize properties and elements 
 
 More settings related to text object can be found within the settings.xml, generated on addon load
