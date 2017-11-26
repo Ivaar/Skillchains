@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.2017.11.25'
+_addon.version = '2.2017.11.26'
 
 require('luau')
 require('pack')
@@ -132,7 +132,11 @@ initialize = function(text, settings)
     if not windower.ffxi.get_info().logged_in then
         return
     end
-    info.job = info.job or windower.ffxi.get_player().main_job
+    if not info.job then
+        local player = windower.ffxi.get_player()
+        info.job = player.main_job
+        info.player = player.id
+    end
     local properties = L{}
     if settings.Show.timer[info.job] then
         properties:append('${timer}')
@@ -155,7 +159,7 @@ function update_weapon(bag, ind)
     end
     local main_weapon = windower.ffxi.get_items(bag,ind).id
     if main_weapon ~= 0 then
-        info.aeonic = L{20515,20594,20695,20843,20890,20935,20977,21025,21082,21147,21485,21694,21753,22117,}:contains(main_weapon)
+        info.aeonic = L{20515,20594,20695,20843,20890,20935,20977,21025,21082,21147,21485,21694,21753,22117}:contains(main_weapon)
         return
     end
     if not check_weapon or coroutine.status(check_weapon) ~= 'suspended' then
@@ -172,16 +176,16 @@ function aeonic_am(step)
 end
 
 function aeonic_prop(ability, actor)
-    self = not actor or windower.ffxi.get_mob_by_target('me').id == actor
-    if self and not info.aeonic or not self and not settings.aeonic then
+    if not ability.aeonic or not info.aeonic and actor == info.player or not settings.aeonic and info.player ~= actor then
        return ability.skillchain
     end
     return {ability.skillchain[1],ability.skillchain[2],ability.aeonic}
 end
 
 function check_props(old, new)
+    local new_n = #old > 3 and 1 or #new
     for k=1,#old do
-        for x=1,#new do
+        for x=1,new_n do
             local v = prop_info[old[k]][new[x]]
             if v then
                 return prop_info[v].lvl == 3 and v == new[x] and v == old[k] and 4 or prop_info[v].lvl,v
@@ -202,7 +206,7 @@ function add_skills(abilities, active, cat, aeonic)
     for k=1,#abilities do local v = abilities[k]
         local ability = skills[cat][v]
         if ability then
-            local lvl,prop = check_props(active, #active <= 3 and ability.skillchain or {ability.skillchain[1]})
+            local lvl,prop = check_props(active, aeonic_prop(ability))
             if prop then
                 t:append({ability.en:rpad(' ',15),'>> Lv',lvl, add_color(aeonic and lvl == 4 and prop_info[prop].aeonic or prop)})
             end
@@ -282,11 +286,11 @@ function apply_props(data, actor, ability)
     local mob_id = data:unpack('b32',19,7)
     local skillchain = skillchains[data:unpack('b10',38,4)]
     if skillchain then
-        local lvl = prop_info[skillchain].lvl == 3 and resonating[mob_id] and check_props(resonating[mob_id].active,ability.skillchain) or prop_info[skillchain].lvl
+        local lvl = prop_info[skillchain].lvl == 3 and resonating[mob_id] and check_props(resonating[mob_id].active,aeonic_prop(ability)) or prop_info[skillchain].lvl
         local step = (resonating[mob_id] and resonating[mob_id].step or 1) + 1
         resonating[mob_id] = {en=ability.en,active={skillchain},ts=os.time(),dur=11-step,wait=3,closed=lvl == 4 or step > 5,step=step}
     elseif L{2,110,161,162,185,187,317}:contains(data:unpack('b10',29,7)) then
-        resonating[mob_id] = {en=ability.en,active=ability.aeonic and aeonic_prop(ability,actor) or ability.skillchain,ts=os.time(),dur=10,wait=3,step=1}
+        resonating[mob_id] = {en=ability.en,active=aeonic_prop(ability,actor),ts=os.time(),dur=10,wait=3,step=1}
     elseif data:unpack('b10',29,7) == 529 then
         resonating[mob_id] = {en=ability.en,active=ability.skillchain,ts=os.time(),dur=ability.dur,wait=0,step=1,bound=data:unpack('b17',27,6)}
     end
@@ -295,11 +299,8 @@ end
 windower.register_event('incoming chunk', function(id, data)
     if id == 0x28 then
         local actor,targets,category,param = data:unpack('Ib10b4b16',6)
-        if category == 4 and skills[4][param] then
-            if (data:unpack('q',34,8) or chain_ability[actor] and chain_ability[actor] - os.time() > 0) then
-                apply_props(data, actor, skills[category][param])
-            end
-        elseif skills[category] and skills[category][param] then
+        if skills[category] and skills[category][param] and 
+            (category ~= 4 or data:unpack('q',34,8) or chain_ability[actor] and chain_ability[actor] - os.time() > 0) then
             apply_props(data, actor, skills[category][param])
         elseif category == 6 and ability_dur[param] then
             chain_ability[actor] = ability_dur[param] + os.time()
