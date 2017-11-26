@@ -10,7 +10,7 @@ along with a list of weapon skills that can skillchain based on the weapon you h
 
 //sc color    -- colorize properties and elements
 
-The following commands allow you to hide/show the display information, they are saved on a per job basis.
+The following commands toggle the display information and are saved on a per job basis.
 
 //sc spell      -- sch immanence and blue magic spells.
 
