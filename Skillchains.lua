@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.2017.11.26'
+_addon.version = '2.2017.11.26.1'
 
 require('luau')
 require('pack')
@@ -75,38 +75,22 @@ colors.Liquefaction =  colors.Fire
 colors.Impaction =     colors.Lightning
 
 skillchains = L{
-    [288] = 'Light',
-    [289] = 'Darkness',
-    [290] = 'Gravitation',
-    [291] = 'Fragmentation',
-    [292] = 'Distortion',
-    [293] = 'Fusion',
-    [294] = 'Compression',
-    [295] = 'Liquefaction',
-    [296] = 'Induration',
-    [297] = 'Reverberation',
-    [298] = 'Transfixion',
-    [299] = 'Scission',
-    [300] = 'Detonation',
-    [301] = 'Impaction',
-    [385] = 'Light',
-    [386] = 'Darkness',
-    [387] = 'Gravitation',
-    [388] = 'Fragmentation',
-    [389] = 'Distortion',
-    [390] = 'Fusion',
-    [391] = 'Compression',
-    [392] = 'Liquefaction',
-    [393] = 'Induration',
-    [394] = 'Reverberation',
-    [395] = 'Transfixion',
-    [396] = 'Scission',
-    [397] = 'Detonation',
-    [398] = 'Impaction',
-    [767] = 'Radiance',
-    [768] = 'Umbra',
-    [769] = 'Radiance',
-    [770] = 'Umbra',
+    [1] = 'Light',
+    [2] = 'Darkness',
+    [3] = 'Gravitation',
+    [4] = 'Fragmentation',
+    [5] = 'Distortion',
+    [6] = 'Fusion',
+    [7] = 'Compression',
+    [8] = 'Liquefaction',
+    [9] = 'Induration',
+    [10] = 'Reverberation',
+    [11] = 'Transfixion',
+    [12] = 'Scission',
+    [13] = 'Detonation',
+    [14] = 'Impaction',
+    [15] = 'Radiance',
+    [16] = 'Umbra',
     }
 
 prop_info = {
@@ -282,30 +266,29 @@ function do_stuff()
     end
 end
 
-function apply_props(data, actor, ability)
-    local mob_id = data:unpack('b32',19,7)
-    local skillchain = skillchains[data:unpack('b10',38,4)]
-    if skillchain then
-        local lvl = prop_info[skillchain].lvl == 3 and resonating[mob_id] and check_props(resonating[mob_id].active,aeonic_prop(ability,actor)) or prop_info[skillchain].lvl
-        local step = (resonating[mob_id] and resonating[mob_id].step or 1) + 1
-        resonating[mob_id] = {en=ability.en,active={skillchain},ts=os.time(),dur=11-step,wait=3,closed=lvl == 4 or step > 5,step=step}
-    elseif L{2,110,161,162,185,187,317}:contains(data:unpack('b10',29,7)) then
-        resonating[mob_id] = {en=ability.en,active=aeonic_prop(ability,actor),ts=os.time(),dur=10,wait=3,step=1}
-    elseif data:unpack('b10',29,7) == 529 then
-        resonating[mob_id] = {en=ability.en,active=ability.skillchain,ts=os.time(),dur=ability.dur,wait=0,step=1,bound=data:unpack('b17',27,6)}
-    end
-end
-
 windower.register_event('incoming chunk', function(id, data)
     if id == 0x28 then
         local actor,targets,category,param = data:unpack('Ib10b4b16',6)
-        if skills[category] and skills[category][param] and 
-            (category ~= 4 or data:unpack('q',34,8) or chain_ability[actor] and chain_ability[actor] - os.time() > 0) then
-            apply_props(data, actor, skills[category][param])
+        local ability = skills[category] and skills[category][param]
+        if ability and (category ~= 4 or data:unpack('q',34,8) or chain_ability[actor] and chain_ability[actor].ts - os.time() > 0) then
+            local mob_id = data:unpack('b32',19,7)
+            local skillchain = skillchains[data:unpack('b6',35)]
+            if skillchain then
+                local lvl = prop_info[skillchain].lvl == 3 and resonating[mob_id] and check_props(resonating[mob_id].active,aeonic_prop(ability,actor)) or prop_info[skillchain].lvl
+                local step = (resonating[mob_id] and resonating[mob_id].step or 1) + 1
+                resonating[mob_id] = {en=ability.en,active={skillchain},ts=os.time(),dur=11-step,wait=3,closed=lvl == 4 or step > 5,step=step}
+            elseif L{2,110,161,162,185,187,317}:contains(data:unpack('b10',29,7)) then
+                resonating[mob_id] = {en=ability.en,active=aeonic_prop(ability,actor),ts=os.time(),dur=10,wait=3,step=1}
+            elseif data:unpack('b10',29,7) == 529 then
+                resonating[mob_id] = {en=ability.en,active=ability.skillchain,ts=os.time(),dur=ability.dur,wait=0,step=1,bound=data:unpack('b17',27,6)}
+            end
+            if category == 4 and chain_ability[actor] and chain_ability[actor].id > 93 then
+                chain_ability[actor] = nil
+            end
         elseif category == 6 and ability_dur[param] then
-            chain_ability[actor] = ability_dur[param] + os.time()
+            chain_ability[actor] =  {id = param, ts = ability_dur[param] + os.time()}
         end
-    elseif id == 0x29 and data:unpack('H',25) == 206 and data:unpack('H',23) == windower.ffxi.get_mob_by_target('me').index then
+    elseif id == 0x29 and data:unpack('H',25) == 206 and data:unpack('I',9) == info.player then
         buffs[data:unpack('I',13)] = false
     elseif id == 0x63 and data:byte(5) == 0x09 then
         buffs = S{data:unpack('H32',9)}
