@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.2017.11.26.2'
+_addon.version = '2.2017.11.26.3'
 
 require('luau')
 require('pack')
@@ -74,24 +74,7 @@ colors.Detonation =    colors.Wind
 colors.Liquefaction =  colors.Fire
 colors.Impaction =     colors.Lightning
 
-skillchains = L{
-    [1] = 'Light',
-    [2] = 'Darkness',
-    [3] = 'Gravitation',
-    [4] = 'Fragmentation',
-    [5] = 'Distortion',
-    [6] = 'Fusion',
-    [7] = 'Compression',
-    [8] = 'Liquefaction',
-    [9] = 'Induration',
-    [10] = 'Reverberation',
-    [11] = 'Transfixion',
-    [12] = 'Scission',
-    [13] = 'Detonation',
-    [14] = 'Impaction',
-    [15] = 'Radiance',
-    [16] = 'Umbra',
-    }
+skillchains = {'Light','Darkness','Gravitation','Fragmentation','Distortion','Fusion','Compression','Liquefaction','Induration','Reverberation','Transfixion','Scission','Detonation','Impaction','Radiance','Umbra'}
 
 prop_info = {
     Radiance = {elements=L{'Fire','Wind','Lightning','Light'},lvl=4},
