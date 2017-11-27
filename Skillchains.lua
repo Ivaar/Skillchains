@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.2017.11.26.1'
+_addon.version = '2.2017.11.26.2'
 
 require('luau')
 require('pack')
@@ -338,7 +338,6 @@ end)
 windower.register_event('job change', function(job,lvl)
     job = res.jobs:with('id', job).english_short
     if job ~= info.job then
-        info = {}
         info.job = job
         config.reload(settings)
     end
