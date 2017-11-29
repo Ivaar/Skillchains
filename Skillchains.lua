@@ -302,7 +302,7 @@ windower.register_event('incoming chunk', function(id, data)
                 break
             end
             set_buff[buff] = true
-            offset = offset + 2
+            offset = offset + 1
         end
         buffs[info.player] = set_buff
     end
