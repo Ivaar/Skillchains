@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.2017.11.26.3'
+_addon.version = '2.2017.11.28'
 
 require('luau')
 require('pack')
@@ -46,9 +46,9 @@ default.display = {text={size=12,font='Consolas'},pos={x=0,y=0}}--,bg={visible=f
 
 settings = config.load(default)
 skill_props = texts.new('',settings.display,settings)
+buff_dur = {[163]=40,[164]=30,[470]=60}
 info = {}
-ability_dur = {[93]=40,[94]=30,[317]=60}
- 
+
 colors = {}            -- Color codes by Sammeh
 colors.Light =         '\\cs(255,255,255)'
 colors.Dark =          '\\cs(0,0,204)'
@@ -249,34 +249,62 @@ function do_stuff()
     end
 end
 
+function chain_buff(actor)
+    if not ja_flag[actor] then 
+        return false
+    end
+    if ja_flag[actor].ts - os.time() < 1 then
+        ja_flag[actor] = nil
+        return false
+    end
+    if ja_flag[actor].buff > 163 then
+        ja_flag[actor] = nil
+    end
+    return true
+end
+
 windower.register_event('incoming chunk', function(id, data)
     if id == 0x28 then
         local actor,targets,category,param = data:unpack('Ib10b4b16',6)
         local ability = skills[category] and skills[category][param]
-        if ability and (category ~= 4 or data:unpack('q',34,8) or chain_ability[actor] and chain_ability[actor].ts - os.time() > 0) then
-            local mob_id = data:unpack('b32',19,7)
-            local skillchain = skillchains[data:unpack('b6',35)]
-            if skillchain then
-                local lvl = prop_info[skillchain].lvl == 3 and resonating[mob_id] and check_props(resonating[mob_id].active,aeonic_prop(ability,actor)) or prop_info[skillchain].lvl
-                local step = (resonating[mob_id] and resonating[mob_id].step or 1) + 1
-                resonating[mob_id] = {en=ability.en,active={skillchain},ts=os.time(),dur=11-step,wait=3,closed=lvl == 4 or step > 5,step=step}
-            elseif L{2,110,161,162,185,187,317}:contains(data:unpack('b10',29,7)) then
-                resonating[mob_id] = {en=ability.en,active=aeonic_prop(ability,actor),ts=os.time(),dur=10,wait=3,step=1}
-            elseif data:unpack('b10',29,7) == 529 then
-                resonating[mob_id] = {en=ability.en,active=ability.skillchain,ts=os.time(),dur=ability.dur,wait=0,step=1,bound=data:unpack('b17',27,6)}
+        local effect = data:unpack('b17',27,6)
+        local prop = skillchains[data:unpack('b6',35)]
+        if ability and (category ~= 4 or chain_buff(actor) or prop) then
+            local mob = data:unpack('b32',19,7)
+            local msg = data:unpack('b10',29,7)
+            if prop then
+                local reson = resonating[mob]
+                local step = (reson and reson.step or 1) + 1
+                local lvl = prop_info[prop].lvl == 3 and reson and check_props(reson.active, aeonic_prop(ability, actor)) or prop_info[prop].lvl
+                resonating[mob] = {en=ability.en, active={prop}, ts=os.time(), dur=11-step, wait=3, step=step, closed=lvl == 4 or step > 5}
+            elseif L{2,110,161,162,185,187,317}:contains(msg) then
+                resonating[mob] = {en=ability.en, active=aeonic_prop(ability, actor), ts=os.time(), dur=10, wait=3, step=1}
+            elseif msg == 529 then
+                resonating[mob] = {en=ability.en, active=ability.skillchain, ts=os.time(), dur=ability.dur, wait=1, step=1, bound=effect}
             end
-            if category == 4 and chain_ability[actor] and chain_ability[actor].id > 93 then
-                chain_ability[actor] = nil
-            end
-        elseif category == 6 and ability_dur[param] then
-            chain_ability[actor] =  {id = param, ts = ability_dur[param] + os.time()}
+        elseif category == 6 and buff_dur[effect] then
+            ja_flag[actor] = {buff = effect, ts = buff_dur[effect] + os.time()}
         end
     elseif id == 0x29 and data:unpack('H',25) == 206 and data:unpack('I',9) == info.player then
-        buffs[data:unpack('I',13)] = false
-    elseif id == 0x63 and data:byte(5) == 0x09 then
-        buffs = S{data:unpack('H32',9)}
+        local buff = data:unpack('I',13)
+        buffs[buff] = nil
+        if buff_dur[buff] then
+            ja_flag[info.player] = nil
+        end
     elseif id == 0x50 and data:byte(6) == 0 then
         update_weapon(data:byte(7),data:byte(5))
+    elseif id == 0x63 and data:byte(5) == 0x09 then
+        local offset = 8
+        local set_buff = {}
+        for n=1,32 do
+            local buff = data:unpack('H', offset+n)
+            if buff == 255 then
+                break
+            end
+            set_buff[buff] = true
+            offset = offset + 2
+        end
+        buffs[info.player] = set_buff
     end
 end)
 
@@ -332,9 +360,9 @@ windower.register_event('unload', function()
 end)
 
 function reset()
-    chain_ability = {}
+    ja_flag = {}
     resonating = {}
-    buffs = S{}
+    buffs = {}
 end
 windower.register_event('zone change', reset)
 
