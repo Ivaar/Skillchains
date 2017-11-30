@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.2017.11.28'
+_addon.version = '2.2017.11.29'
 
 require('luau')
 require('pack')
@@ -135,27 +135,29 @@ function update_weapon(bag, ind)
 end
 
 function aeonic_am(step)
-    for x=270,272 do
-        if buffs[x] then
-            return 273-x <= step
+    if info.aeonic then
+        for x=270,272 do
+            if buffs[x] then
+                return 272-x < step
+            end
         end
     end
+    return false
 end
 
 function aeonic_prop(ability, actor)
     if not ability.aeonic or not info.aeonic and actor == info.player or not settings.aeonic and info.player ~= actor then
-       return ability.skillchain
+        return ability.skillchain
     end
     return {ability.skillchain[1],ability.skillchain[2],ability.aeonic}
 end
 
 function check_props(old, new)
-    local new_n = #old > 3 and 1 or #new
+    local n = #old < 4 and #new or 1
     for k=1,#old do
-        for x=1,new_n do
-            local v = prop_info[old[k]][new[x]]
+        for i=1,n do local v = prop_info[old[k]][new[i]]
             if v then
-                return prop_info[v].lvl == 3 and v == new[x] and v == old[k] and 4 or prop_info[v].lvl,v
+                return prop_info[v].lvl == 3 and old[k] == new[i] and 4 or prop_info[v].lvl, v
             end
         end
     end
@@ -163,44 +165,41 @@ end
 
 function add_color(str)
     if str and settings.color then
-        return '%s%s\\cr':format(colors[str],str)
+        return '%s%s\\cr':format(colors[str], str)
     end
     return str
 end
 
 function add_skills(abilities, active, cat, aeonic)
-    local t = L{}
-    for k=1,#abilities do local v = abilities[k]
-        local ability = skills[cat][v]
+    local t = {}
+    for k=1,#abilities do local ability = skills[cat][abilities[k]]
         if ability then
             local lvl,prop = check_props(active, aeonic_prop(ability))
             if prop then
-                t:append({ability.en:rpad(' ',15),'>> Lv',lvl, add_color(aeonic and lvl == 4 and prop_info[prop].aeonic or prop)})
+                table.insert(t, {'%s>> Lv':format(ability.en:rpad(' ',16)),lvl, add_color(aeonic and lvl == 4 and prop_info[prop].aeonic or prop)})
             end
         end
     end
-    return table.sort(t, function(a, b) return a[3] > b[3] end)
+    table.sort(t, function(a, b) return a[2] > b[2] end)
+    for k=1,#t do
+        t[k] = table.concat(t[k],' ')
+    end
+    return table.concat(t,'\n')
 end
 
 function check_results(reson)
-    local t = {[1]=L{},[2]=L{}}
+    local str = ''
     if settings.Show.spell[info.job] and info.job == 'SCH' then
-        t[1] = add_skills({1,2,3,4,5,6,7,8}, reson.active, 20)
+        str = add_skills({1,2,3,4,5,6,7,8}, reson.active, 20)
     elseif settings.Show.spell[info.job] and info.job == 'BLU' then
-        t[1] = add_skills(windower.ffxi.get_mjob_data().spells, reson.active, 4)
+        str = add_skills(windower.ffxi.get_mjob_data().spells, reson.active, 4)
     elseif settings.Show.pet[info.job] and windower.ffxi.get_mob_by_target('pet') then
-        t[1] = add_skills(windower.ffxi.get_abilities().job_abilities, reson.active, 13)
+        str = add_skills(windower.ffxi.get_abilities().job_abilities, reson.active, 13)
     end
     if settings.Show.weapon[info.job] then
-        t[2] = add_skills(windower.ffxi.get_abilities().weapon_skills, reson.active, 3, info.aeonic and aeonic_am(reson.step))
+        str = str..add_skills(windower.ffxi.get_abilities().weapon_skills, reson.active, 3, aeonic_am(reson.step))
     end
-    local skill_list = L{}
-    for x=1,2 do
-        for v in t[x]:it() do
-            skill_list:append(table.concat(v,' '))
-        end
-    end
-    return skill_list:concat('\n')
+    return str
 end
 
 function do_stuff()
@@ -288,23 +287,17 @@ windower.register_event('incoming chunk', function(id, data)
     elseif id == 0x29 and data:unpack('H',25) == 206 and data:unpack('I',9) == info.player then
         local buff = data:unpack('I',13)
         buffs[buff] = nil
-        if buff_dur[buff] then
+        if buff_dur[buff] and ja_flag[info.player] and buff == ja_flag[info.player].buff then
             ja_flag[info.player] = nil
         end
     elseif id == 0x50 and data:byte(6) == 0 then
         update_weapon(data:byte(7),data:byte(5))
-    elseif id == 0x63 and data:byte(5) == 0x09 then
-        local offset = 8
+    elseif id == 0x63 and data:byte(5) == 9 then
         local set_buff = {}
-        for n=1,32 do
-            local buff = data:unpack('H', offset+n)
-            if buff == 255 then
-                break
-            end
-            set_buff[buff] = true
-            offset = offset + 1
+        for n=0,31 do
+            set_buff[data:unpack('H', n*2+9)] = true
         end
-        buffs[info.player] = set_buff
+        buffs = set_buff
     end
 end)
 
