@@ -190,11 +190,11 @@ end
 function check_results(reson)
     local str = ''
     if settings.Show.spell[info.job] and info.job == 'SCH' then
-        str = add_skills({1,2,3,4,5,6,7,8}, reson.active, 20)
+        str = add_skills({1,2,3,4,5,6,7,8}, reson.active, 20)..'\n'
     elseif settings.Show.spell[info.job] and info.job == 'BLU' then
-        str = add_skills(windower.ffxi.get_mjob_data().spells, reson.active, 4)
+        str = add_skills(windower.ffxi.get_mjob_data().spells, reson.active, 4)..'\n'
     elseif settings.Show.pet[info.job] and windower.ffxi.get_mob_by_target('pet') then
-        str = add_skills(windower.ffxi.get_abilities().job_abilities, reson.active, 13)
+        str = add_skills(windower.ffxi.get_abilities().job_abilities, reson.active, 13)..'\n'
     end
     if settings.Show.weapon[info.job] then
         str = str..add_skills(windower.ffxi.get_abilities().weapon_skills, reson.active, 3, aeonic_am(reson.step))
