@@ -6,7 +6,9 @@ along with a list of weapon skills that can skillchain based on the weapon you h
 
 //sc move    -- displays text box click and drag it to desired location.
 
-//sc save    -- saves current settings to ALL characters.
+//sc save    -- save settings to current character.
+
+//sc save all   -- save settings to all characters.
 
 //sc color    -- colorize properties and elements
 
