@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.2017.11.29'
+_addon.version = '2.2017.12.03'
 
 require('luau')
 require('pack')
@@ -74,7 +74,7 @@ colors.Detonation =    colors.Wind
 colors.Liquefaction =  colors.Fire
 colors.Impaction =     colors.Lightning
 
-skillchains = {'Light','Darkness','Gravitation','Fragmentation','Distortion','Fusion','Compression','Liquefaction','Induration','Reverberation','Transfixion','Scission','Detonation','Impaction','Radiance','Umbra'}
+skillchain = {'Light','Darkness','Gravitation','Fragmentation','Distortion','Fusion','Compression','Liquefaction','Induration','Reverberation','Transfixion','Scission','Detonation','Impaction','Radiance','Umbra'}
 
 prop_info = {
     Radiance = {elements=L{'Fire','Wind','Lightning','Light'},lvl=4},
@@ -174,7 +174,7 @@ function add_skills(abilities, active, cat, aeonic)
     local t = {}
     for k=1,#abilities do local ability = skills[cat][abilities[k]]
         if ability then
-            local lvl,prop = check_props(active, aeonic_prop(ability))
+            local lvl,prop = check_props(active, aeonic_prop(ability, info.player))
             if prop then
                 table.insert(t, {'%s>> Lv':format(ability.en:rpad(' ',16)),lvl, add_color(aeonic and lvl == 4 and prop_info[prop].aeonic or prop)})
             end
@@ -267,7 +267,7 @@ windower.register_event('incoming chunk', function(id, data)
         local actor,targets,category,param = data:unpack('Ib10b4b16',6)
         local ability = skills[category] and skills[category][param]
         local effect = data:unpack('b17',27,6)
-        local prop = skillchains[data:unpack('b6',35)]
+        local prop = skillchain[data:unpack('b6',35)]
         if ability and (category ~= 4 or chain_buff(actor) or prop) then
             local mob = data:unpack('b32',19,7)
             local msg = data:unpack('b10',29,7)
