@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.2017.12.08'
+_addon.version = '2.2017.12.12'
 
 require('luau')
 require('pack')
@@ -46,6 +46,8 @@ default.display = {text={size=12,font='Consolas'},pos={x=0,y=0}}--,bg={visible=f
 
 settings = config.load(default)
 skill_props = texts.new('',settings.display,settings)
+aeonic_weapon = S{20515,20594,20695,20843,20890,20935,20977,21025,21082,21147,21485,21694,21753,22117}
+message_ids = S{2,110,161,162,185,187,317}
 buff_dur = {[163]=40,[164]=30,[470]=60}
 info = {}
 
@@ -76,7 +78,7 @@ colors.Impaction =     colors.Lightning
 
 skillchain = {'Light','Darkness','Gravitation','Fragmentation','Distortion','Fusion','Compression','Liquefaction','Induration','Reverberation','Transfixion','Scission','Detonation','Impaction','Radiance','Umbra'}
 
-prop_info = {
+sc_info = {
     Radiance = {'Fire','Wind','Lightning','Light',lvl=4},
     Umbra = {'Earth','Ice','Water','Dark',lvl=4},
     Light = {'Fire','Wind','Lightning','Light', Light='Light', aeonic='Radiance',lvl=3},
@@ -113,6 +115,8 @@ initialize = function(text, settings)
     end
     if settings.Show.props[info.job] then
         properties:append('[${props}] ${elements}')
+    elseif settings.Show.burst[info.job] then
+        properties:append('${elements}')
     end
     properties:append('${disp_info}')
     text:clear()
@@ -124,22 +128,20 @@ function update_weapon(bag, ind)
     if not settings.Show.weapon[info.job] then
         return
     end
-    local main_weapon = windower.ffxi.get_items(bag,ind).id
+    local main_weapon = windower.ffxi.get_items(bag, ind).id
     if main_weapon ~= 0 then
-        info.aeonic = L{20515,20594,20695,20843,20890,20935,20977,21025,21082,21147,21485,21694,21753,22117}:contains(main_weapon)
+        info.aeonic = aeonic_weapon[main_weapon]
         return
     end
     if not check_weapon or coroutine.status(check_weapon) ~= 'suspended' then
-        check_weapon = coroutine.schedule(update_weapon-{bag,ind}, 10)
+        check_weapon = coroutine.schedule(update_weapon-{bag, ind}, 10)
     end
 end
 
 function aeonic_am(step)
-    if info.aeonic then
-        for x=270,272 do
-            if buffs[x] then
-                return 272-x < step
-            end
+    for x=270,272 do
+        if buffs[info.player][x] then
+            return 272-x < step
         end
     end
     return false
@@ -149,52 +151,57 @@ function aeonic_prop(ability, actor)
     if not ability.aeonic or not info.aeonic and actor == info.player or not settings.aeonic and info.player ~= actor then
         return ability.skillchain
     end
-    return {ability.skillchain[1],ability.skillchain[2],ability.aeonic}
+    return {ability.skillchain[1], ability.skillchain[2], ability.aeonic}
 end
 
 function check_props(old, new)
     local n = #old < 4 and #new or 1
     for k=1,#old do
-        for i=1,n do local v = prop_info[old[k]][new[i]]
+        for i=1,n do local v = sc_info[old[k]][new[i]]
             if v then
-                return prop_info[v].lvl == 3 and old[k] == new[i] and 4 or prop_info[v].lvl, v
+                return sc_info[v].lvl == 3 and old[k] == new[i] and 4 or sc_info[v].lvl, v
             end
         end
     end
 end
 
-function add_skills(abilities, active, cat, aeonic)
-    local t = {'', '', '', ''}
+function add_skills(t, abilities, active, cat, aeonic)
+    local tt = {{},{},{},{}}
     for k=1,#abilities do local ability = skills[cat][abilities[k]]
         if ability then
-            local lvl, prop = check_props(active, aeonic_prop(ability, info.player))
+            local lv, prop = check_props(active, aeonic_prop(ability, info.player))
             if prop then
-                prop = aeonic and lvl == 4 and prop_info[prop].aeonic or prop
+                prop = aeonic and lvl == 4 and sc_info[prop].aeonic or prop
                 if settings.color then
-                    prop = '%s%-14s\\cr':format(colors[prop], prop)
+                    tt[lv][#tt[lv]+1] = '%-17s>> Lv.%d %s%-14s\\cr':format(ability.en, lv, colors[prop], prop)
                 else
-                    prop = '%s%-14s':format(prop)
+                    tt[lv][#tt[lv]+1] = '%-17s>> Lv.%d %-14s':format(ability.en, lv, prop)
                 end
-                t[lvl] = '%-17s>> Lv.%d %s\n':format(ability.en, lvl, prop) .. t[lvl]
+                 
             end
         end
     end
-    return t[4] .. t[3] .. t[2] .. t[1]
+    for x=4,1,-1 do
+        for k=1,#tt[x] do
+            t[#t+1] = tt[x][k]
+        end
+    end
+    return t
 end
 
 function check_results(reson)
-    local str = ''
+    local t = {}
     if settings.Show.spell[info.job] and info.job == 'SCH' then
-        str = str .. add_skills({1,2,3,4,5,6,7,8}, reson.active, 20)
+        t = add_skills(t, {1,2,3,4,5,6,7,8}, reson.active, 20)
     elseif settings.Show.spell[info.job] and info.job == 'BLU' then
-        str = str .. add_skills(windower.ffxi.get_mjob_data().spells, reson.active, 4)
+        t = add_skills(t, windower.ffxi.get_mjob_data().spells, reson.active, 4)
     elseif settings.Show.pet[info.job] and windower.ffxi.get_mob_by_target('pet') then
-        str = str .. add_skills(windower.ffxi.get_abilities().job_abilities, reson.active, 13)
+        t = add_skills(t, windower.ffxi.get_abilities().job_abilities, reson.active, 13)
     end
     if settings.Show.weapon[info.job] then
-        str = str .. add_skills(windower.ffxi.get_abilities().weapon_skills, reson.active, 3, aeonic_am(reson.step))
+        t = add_skills(t, windower.ffxi.get_abilities().weapon_skills, reson.active, 3, info.aeonic and aeonic_am(reson.step))
     end
-    return str
+    return _raw.table.concat(t, '\n')
 end
 
 function conv(t)
@@ -213,7 +220,7 @@ function conv(t)
 end
 
 function do_stuff()
-    local targ = windower.ffxi.get_mob_by_target('t','bt')
+    local targ = windower.ffxi.get_mob_by_target('t', 'bt')
     local now = os.time()
     for k,v in pairs(resonating) do
         if v.ts and now-v.ts > v.dur then
@@ -238,7 +245,7 @@ function do_stuff()
         resonating[targ.id].props = resonating[targ.id].props or 
             not resonating[targ.id].bound and conv(resonating[targ.id].active) or 'Chainbound Lv.%d':format(resonating[targ.id].bound)
         resonating[targ.id].elements = resonating[targ.id].elements or
-            resonating[targ.id].step > 1 and settings.Show.burst[info.job] and '('..conv(prop_info[resonating[targ.id].active[1]])..')' or ''
+            resonating[targ.id].step > 1 and settings.Show.burst[info.job] and '('..conv(sc_info[resonating[targ.id].active[1]])..')' or ''
         skill_props:update(resonating[targ.id])
         skill_props:show()
     elseif not visible then
@@ -246,59 +253,60 @@ function do_stuff()
     end
 end
 
-function chain_buff(actor)
-    if not ja_flag[actor] then 
-        return false
+function check_buff(t, i)
+    if t[i] == true or t[i] - os.time() > 0 then
+        return true
     end
-    if ja_flag[actor].ts - os.time() < 1 then
-        ja_flag[actor] = nil
-        return false
+    t[i] = nil
+end
+
+function chain_buff(t)
+    local buff = t[164] and 164 or t[470] and 470
+    if buff and check_buff(t, buff) then
+        t[buff] = nil
+        return true
     end
-    if ja_flag[actor].buff > 163 then
-        ja_flag[actor] = nil
-    end
-    return true
+    return t[163] and check_buff(t, 163)
 end
 
 windower.register_event('incoming chunk', function(id, data)
     if id == 0x28 then
-        local actor,targets,category,param = data:unpack('Ib10b4b16',6)
+        local actor,targets,category,param = data:unpack('Ib10b4b16', 6)
         local ability = skills[category] and skills[category][param]
         local effect = data:unpack('b17', 27, 6)
         local prop = skillchain[data:unpack('b6', 35)]
-        if ability and (category ~= 4 or chain_buff(actor) or prop) then
+        if ability and (category ~= 4 or buffs[actor] and chain_buff(buffs[actor]) or prop) then
             local mob = data:unpack('b32', 19, 7)
             local msg = data:unpack('b10', 29, 7)
             if prop then
                 local reson = resonating[mob]
                 local step = (reson and reson.step or 1) + 1
-                local lvl = prop_info[prop].lvl == 3 and reson and check_props(reson.active, aeonic_prop(ability, actor)) or prop_info[prop].lvl
+                local lvl = sc_info[prop].lvl == 3 and reson and check_props(reson.active, aeonic_prop(ability, actor)) or sc_info[prop].lvl
                 resonating[mob] = {en=ability.en, active={prop}, ts=os.time(), dur=11-step, wait=3, step=step, closed=lvl == 4 or step > 5}
-            elseif L{2,110,161,162,185,187,317}:contains(msg) then
+            elseif message_ids[msg] then
                 resonating[mob] = {en=ability.en, active=aeonic_prop(ability, actor), ts=os.time(), dur=10, wait=3, step=1}
             elseif msg == 529 then
                 resonating[mob] = {en=ability.en, active=ability.skillchain, ts=os.time(), dur=ability.dur, wait=1, step=1, bound=effect}
             end
         elseif category == 6 and buff_dur[effect] then
-            ja_flag[actor] = {buff = effect, ts = buff_dur[effect] + os.time()}
+            buffs[actor] = buffs[actor] or {}
+            buffs[actor][effect] = buff_dur[effect] + os.time()
         end
     elseif id == 0x29 and data:unpack('H', 25) == 206 and data:unpack('I', 9) == info.player then
-        local buff = data:unpack('H', 13)
-        buffs[buff] = nil
-        if buff_dur[buff] and ja_flag[info.player] and buff == ja_flag[info.player].buff then
-            ja_flag[info.player] = nil
-        end
+        buffs[info.player][data:unpack('H', 13)] = nil
     elseif id == 0x50 and data:byte(6) == 0 then
         update_weapon(data:byte(7), data:byte(5))
     elseif id == 0x63 and data:byte(5) == 9 then
         local set_buff = {}
         for n=1,32 do
             local buff = data:unpack('H', n*2+7)
-            if buff > 269 and buff < 273 then
+            if buff_dur[buff] then
+                set_buff[buff] = math.round(data:unpack('I', n*4+69)/60+1510890319.3)
+            elseif buff > 269 and buff < 273 then
                 set_buff[buff] = true
             end
         end
-        buffs = set_buff
+        buffs[info.player] = set_buff
     end
 end)
 
@@ -315,10 +323,10 @@ windower.register_event('addon command', function(cmd, ...)
     elseif cmd == 'save' then
         local arg = ... and ...:lower() == 'all' and ...
         config.save(settings, arg)
-        windower.add_to_chat(207, '%s: settings saved to %s character%s.':format(_addon.name,arg or 'current',arg and 's' or ''))
+        windower.add_to_chat(207, '%s: settings saved to %s character%s.':format(_addon.name, arg or 'current', arg and 's' or ''))
     elseif default.Show[cmd] then
         if not default.Show[cmd][info.job] then
-            windower.add_to_chat(207, '%s: unable to set %s on %s.':format(_addon.name,cmd,info.job))
+            windower.add_to_chat(207, '%s: unable to set %s on %s.':format(_addon.name, cmd, info.job))
             return
         end
         local key = settings.Show[cmd][info.job]
@@ -329,10 +337,10 @@ windower.register_event('addon command', function(cmd, ...)
         end
         config.save(settings)
         config.reload(settings)
-        windower.add_to_chat(207, '%s: %s info will no%s be displayed on %s.':format(_addon.name,cmd,key and ' longer' or 'w',info.job))--'t' or 'w'
+        windower.add_to_chat(207, '%s: %s info will no%s be displayed on %s.':format(_addon.name, cmd, key and ' longer' or 'w', info.job))--'t' or 'w'
     elseif type(default[cmd]) == 'boolean' then
         settings[cmd] = not settings[cmd]
-        windower.add_to_chat(207, '%s: %s %s':format(_addon.name,cmd,settings[cmd] and 'on' or 'off'))
+        windower.add_to_chat(207, '%s: %s %s':format(_addon.name, cmd, settings[cmd] and 'on' or 'off'))
     elseif cmd == 'eval' then
         assert(loadstring(table.concat({...}, ' ')))()
     else
@@ -354,9 +362,8 @@ windower.register_event('unload', function()
 end)
 
 function reset()
-    ja_flag = {}
     resonating = {}
-    buffs = {}
+    buffs = {[info.player] = {}}
 end
 windower.register_event('zone change', reset)
 
