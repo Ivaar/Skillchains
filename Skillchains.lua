@@ -301,7 +301,7 @@ windower.register_event('incoming chunk', function(id, data)
         for n=1,32 do
             local buff = data:unpack('H', n*2+7)
             if buff_dur[buff] then
-                set_buff[buff] = math.floor(data:unpack('I', n*4+69)/60+1510890319.2)
+                set_buff[buff] = math.floor(data:unpack('I', n*4+69)/60+1510890319.1)
             elseif buff > 269 and buff < 273 then
                 set_buff[buff] = true
             end
