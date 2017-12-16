@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.2017.12.12'
+_addon.version = '2.2017.12.15'
 
 require('luau')
 require('pack')
@@ -49,7 +49,7 @@ skill_props = texts.new('',settings.display,settings)
 aeonic_weapon = S{20515,20594,20695,20843,20890,20935,20977,21025,21082,21147,21485,21694,21753,22117}
 message_ids = S{2,110,161,162,185,187,317}
 buff_dur = {[163]=40,[164]=30,[470]=60}
-info = {}
+info = {member = {}}
 
 colors = {}            -- Color codes by Sammeh
 colors.Light =         '\\cs(255,255,255)'
@@ -79,22 +79,22 @@ colors.Impaction =     colors.Lightning
 skillchain = {'Light','Darkness','Gravitation','Fragmentation','Distortion','Fusion','Compression','Liquefaction','Induration','Reverberation','Transfixion','Scission','Detonation','Impaction','Radiance','Umbra'}
 
 sc_info = {
-    Radiance = {'Fire','Wind','Lightning','Light',lvl=4},
-    Umbra = {'Earth','Ice','Water','Dark',lvl=4},
-    Light = {'Fire','Wind','Lightning','Light', Light='Light', aeonic='Radiance',lvl=3},
-    Darkness = {'Earth','Ice','Water','Dark', Darkness='Darkness', aeonic='Umbra',lvl=3},
-    Gravitation = {'Earth','Dark', Distortion='Darkness', Fragmentation='Fragmentation',lvl=2},
-    Fragmentation = {'Wind','Lightning', Fusion='Light', Distortion='Distortion',lvl=2},
-    Distortion = {'Ice','Water', Gravitation='Darkness', Fusion='Fusion',lvl=2},
-    Fusion = {'Fire','Light', Fragmentation='Light', Gravitation='Gravitation',lvl=2},
-    Compression = {'Darkness', Transfixion='Transfixion', Detonation='Detonation',lvl=1},
-    Liquefaction = {'Fire', Impaction='Fusion', Scission='Scission',lvl=1},
-    Induration = {'Ice', Reverberation='Fragmentation', Compression='Compression',Impaction='Impaction',lvl=1},
-    Reverberation = {'Water', Induration='Induration', Impaction='Impaction',lvl=1},
-    Transfixion = {'Light', Scission='Distortion', Reverberation='Reverberation',Compression='Compression',lvl=1},
-    Scission = {'Earth', Liquefaction='Liquefaction', Reverberation='Reverberation',Detonation='Detonation',lvl=1},
-    Detonation = {'Wind', Compression='Gravitation', Scission='Scission',lvl=1},
-    Impaction = {'Lightning', Liquefaction='Liquefaction', Detonation='Detonation',lvl=1},
+    Radiance = {ele={'Fire','Wind','Lightning','Light'}, lvl=4},
+    Umbra = {ele={'Earth','Ice','Water','Dark'}, lvl=4},
+    Light = {ele={'Fire','Wind','Lightning','Light'}, Light='Light', aeonic='Radiance', lvl=3},
+    Darkness = {ele={'Earth','Ice','Water','Dark'}, Darkness='Darkness', aeonic='Umbra', lvl=3},
+    Gravitation = {ele={'Earth','Dark'}, Distortion='Darkness', Fragmentation='Fragmentation', lvl=2},
+    Fragmentation = {ele={'Wind','Lightning'}, Fusion='Light', Distortion='Distortion', lvl=2},
+    Distortion = {ele={'Ice','Water'}, Gravitation='Darkness', Fusion='Fusion', lvl=2},
+    Fusion = {ele={'Fire','Light'}, Fragmentation='Light', Gravitation='Gravitation', lvl=2},
+    Compression = {ele={'Darkness'}, Transfixion='Transfixion', Detonation='Detonation', lvl=1},
+    Liquefaction = {ele={'Fire'}, Impaction='Fusion', Scission='Scission', lvl=1},
+    Induration = {ele={'Ice'}, Reverberation='Fragmentation', Compression='Compression', Impaction='Impaction', lvl=1},
+    Reverberation = {ele={'Water'}, Induration='Induration', Impaction='Impaction', lvl=1},
+    Transfixion = {ele={'Light'}, Scission='Distortion', Reverberation='Reverberation', Compression='Compression', lvl=1},
+    Scission = {ele={'Earth'}, Liquefaction='Liquefaction', Reverberation='Reverberation', Detonation='Detonation', lvl=1},
+    Detonation = {ele={'Wind'}, Compression='Gravitation', Scission='Scission', lvl=1},
+    Impaction = {ele={'Lightning'}, Liquefaction='Liquefaction', Detonation='Detonation', lvl=1},
     }
 
 initialize = function(text, settings)
@@ -171,18 +171,15 @@ function add_skills(t, abilities, active, cat, aeonic)
         if ability then
             local lv, prop = check_props(active, aeonic_prop(ability, info.player))
             if prop then
-                prop = aeonic and lvl == 4 and sc_info[prop].aeonic or prop
-                if settings.color then
-                    tt[lv][#tt[lv]+1] = '%-17s>> Lv.%d %s%-14s\\cr':format(ability.en, lv, colors[prop], prop)
-                else
-                    tt[lv][#tt[lv]+1] = '%-17s>> Lv.%d %-14s':format(ability.en, lv, prop)
-                end
-                 
+                prop = aeonic and lv == 4 and sc_info[prop].aeonic or prop
+                tt[lv][#tt[lv]+1] = settings.color and
+                    '%-17s>> Lv.%d %s%-14s\\cr':format(ability.en, lv, colors[prop], prop) or
+                    '%-17s>> Lv.%d %-14s':format(ability.en, lv, prop)
             end
         end
     end
     for x=4,1,-1 do
-        for k=1,#tt[x] do
+        for k=#tt[x],1,-1 do
             t[#t+1] = tt[x][k]
         end
     end
@@ -205,18 +202,14 @@ function check_results(reson)
 end
 
 function conv(t)
-    local str = ''
-    for k=1,#t do
-        if k > 1 then
-            str = str .. ','
-        end
-        if settings.color then
-            str = str .. colors[t[k]] .. t[k] .. '\\cr'
-        else
-            str = str .. t[k]
+    local temp
+    if settings.color then
+        temp = {}
+        for k=1,#t do
+            temp[k] = '%s%s\\cr':format(colors[t[k]], t[k])
         end
     end
-    return str
+    return _raw.table.concat(temp or t, ',')
 end
 
 function do_stuff()
@@ -242,10 +235,10 @@ function do_stuff()
             resonating[targ.id] = nil
             return
         end
-        resonating[targ.id].props = resonating[targ.id].props or 
+        resonating[targ.id].props = resonating[targ.id].props or
             not resonating[targ.id].bound and conv(resonating[targ.id].active) or 'Chainbound Lv.%d':format(resonating[targ.id].bound)
         resonating[targ.id].elements = resonating[targ.id].elements or
-            resonating[targ.id].step > 1 and settings.Show.burst[info.job] and '('..conv(sc_info[resonating[targ.id].active[1]])..')' or ''
+            resonating[targ.id].step > 1 and settings.Show.burst[info.job] and '(%s)':format(conv(sc_info[resonating[targ.id].active[1]].ele)) or ''
         skill_props:update(resonating[targ.id])
         skill_props:show()
     elseif not visible then
@@ -261,9 +254,9 @@ function check_buff(t, i)
 end
 
 function chain_buff(t)
-    local buff = t[164] and 164 or t[470] and 470
-    if buff and check_buff(t, buff) then
-        t[buff] = nil
+    local i = t[164] and 164 or t[470] and 470
+    if i and check_buff(t, i) then
+        t[i] = nil
         return true
     end
     return t[163] and check_buff(t, 163)
@@ -279,10 +272,10 @@ windower.register_event('incoming chunk', function(id, data)
             local mob = data:unpack('b32', 19, 7)
             local msg = data:unpack('b10', 29, 7)
             if prop then
-                local reson = resonating[mob]
-                local step = (reson and reson.step or 1) + 1
-                local lvl = sc_info[prop].lvl == 3 and reson and check_props(reson.active, aeonic_prop(ability, actor)) or sc_info[prop].lvl
-                resonating[mob] = {en=ability.en, active={prop}, ts=os.time(), dur=11-step, wait=3, step=step, closed=lvl == 4 or step > 5}
+                local step = (resonating[mob] and resonating[mob].step or 1) + 1
+                local closed = step > 5 or sc_info[prop].lvl > 2 and 
+                    (sc_info[prop].lvl == 4 or resonating[mob] and check_props(resonating[mob].active, aeonic_prop(ability, actor)) == 4)
+                resonating[mob] = {en=ability.en, active={prop}, ts=os.time(), dur=11-step, wait=3, step=step, closed=closed}
             elseif message_ids[msg] then
                 resonating[mob] = {en=ability.en, active=aeonic_prop(ability, actor), ts=os.time(), dur=10, wait=3, step=1}
             elseif msg == 529 then
@@ -300,13 +293,37 @@ windower.register_event('incoming chunk', function(id, data)
         local set_buff = {}
         for n=1,32 do
             local buff = data:unpack('H', n*2+7)
-            if buff_dur[buff] then
-                set_buff[buff] = math.floor(data:unpack('I', n*4+69)/60+1510890319.1)
-            elseif buff > 269 and buff < 273 then
+            if buff_dur[buff] or buff > 269 and buff < 273 then
+            --if buff_dur[buff] then
+            --    set_buff[buff] = math.floor(data:unpack('I', n*4+69)/60+1510890319.1)
+            --elseif buff > 269 and buff < 273 then
                 set_buff[buff] = true
             end
         end
         buffs[info.player] = set_buff
+    --[[elseif id == 0x076 then
+        local pos = 5
+        for i = 1,5 do
+            local id = data:unpack('I', pos)
+            if id == 0 then
+                if not info.member[i] then
+                    break
+                end
+        ]]--        buffs[info.member[i]] = nil
+        --[[        info.member[i] = nil
+            else
+                info.member[i] = id
+                local set_buff = {}
+                for n=0,31 do
+                    local buff = data:byte(pos+16+n)+256*(math.floor(data:byte(pos+8+math.floor(n/4))/4^(n%4))%4)
+                    if buff_dur[buff] then
+                        set_buff[buff] = true
+                    end
+                end
+                buffs[id] = set_buff
+            end
+            pos = pos + 48
+        end]]
     end
 end)
 
@@ -321,13 +338,12 @@ windower.register_event('addon command', function(cmd, ...)
             skill_props:hide()
         end
     elseif cmd == 'save' then
-        local arg = ... and ...:lower() == 'all' and ...
+        local arg = ... and ...:lower() == 'all' and 'all'
         config.save(settings, arg)
         windower.add_to_chat(207, '%s: settings saved to %s character%s.':format(_addon.name, arg or 'current', arg and 's' or ''))
     elseif default.Show[cmd] then
         if not default.Show[cmd][info.job] then
-            windower.add_to_chat(207, '%s: unable to set %s on %s.':format(_addon.name, cmd, info.job))
-            return
+            return error('unable to set %s on %s.':format(cmd, info.job))
         end
         local key = settings.Show[cmd][info.job]
         if not key then
@@ -348,7 +364,7 @@ windower.register_event('addon command', function(cmd, ...)
     end
 end)
 
-windower.register_event('job change', function(job,lvl)
+windower.register_event('job change', function(job, lvl)
     job = res.jobs:with('id', job).english_short
     if job ~= info.job then
         info.job = job
@@ -378,6 +394,6 @@ end)
 
 windower.register_event('logout', function()
     coroutine.close(check_weapon) check_weapon = nil
-    info = {}
+    info = {member = {}}
     reset()
 end)
