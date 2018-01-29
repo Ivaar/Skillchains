@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.2017.12.15'
+_addon.version = '2.18.01.28'
 
 require('luau')
 require('pack')
@@ -50,6 +50,8 @@ aeonic_weapon = S{20515,20594,20695,20843,20890,20935,20977,21025,21082,21147,21
 message_ids = S{2,110,161,162,185,187,317}
 buff_dur = {[163]=40,[164]=30,[470]=60}
 info = {member = {}}
+resonating = {}
+buffs = {}
 
 colors = {}            -- Color codes by Sammeh
 colors.Light =         '\\cs(255,255,255)'
@@ -201,7 +203,7 @@ function check_results(reson)
     return _raw.table.concat(t, '\n')
 end
 
-function conv(t)
+function colorize(t)
     local temp
     if settings.color then
         temp = {}
@@ -236,9 +238,9 @@ function do_stuff()
             return
         end
         resonating[targ.id].props = resonating[targ.id].props or
-            not resonating[targ.id].bound and conv(resonating[targ.id].active) or 'Chainbound Lv.%d':format(resonating[targ.id].bound)
+            not resonating[targ.id].bound and colorize(resonating[targ.id].active) or 'Chainbound Lv.%d':format(resonating[targ.id].bound)
         resonating[targ.id].elements = resonating[targ.id].elements or
-            resonating[targ.id].step > 1 and settings.Show.burst[info.job] and '(%s)':format(conv(sc_info[resonating[targ.id].active[1]].ele)) or ''
+            resonating[targ.id].step > 1 and settings.Show.burst[info.job] and '(%s)':format(colorize(sc_info[resonating[targ.id].active[1]].ele)) or ''
         skill_props:update(resonating[targ.id])
         skill_props:show()
     elseif not visible then
@@ -372,28 +374,28 @@ windower.register_event('job change', function(job, lvl)
     end
 end)
 
-windower.register_event('unload', function()
-    coroutine.close(check_weapon)
-    coroutine.close(do_loop)
-end)
-
-function reset()
+windower.register_event('zone change', function()
     resonating = {}
-    buffs = {[info.player] = {}}
-end
-windower.register_event('zone change', reset)
+end)
 
 windower.register_event('load', function()
     if windower.ffxi.get_info().logged_in then
         local equip = windower.ffxi.get_items('equipment')
         update_weapon(equip.main_bag, equip.main)
+        buffs[info.player] = {}
     end
-    reset()
     do_loop = do_stuff:loop(settings.UpdateFrequency)
 end)
 
+windower.register_event('unload', function()
+    coroutine.close(check_weapon)
+    coroutine.close(do_loop)
+end)
+
 windower.register_event('logout', function()
-    coroutine.close(check_weapon) check_weapon = nil
+    coroutine.close(check_weapon)
+    check_weapon = nil
     info = {member = {}}
-    reset()
+    resonating = {}
+    buffs = {}
 end)
