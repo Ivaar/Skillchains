@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.18.01.28'
+_addon.version = '2.18.05.08'
 
 require('luau')
 require('pack')
@@ -113,7 +113,7 @@ initialize = function(text, settings)
         properties:append('${timer}')
     end
     if settings.Show.step[info.job] then
-        properties:append('Step: ${step} >> ${en}')
+        properties:append('Step: ${step} → ${en}')
     end
     if settings.Show.props[info.job] then
         properties:append('[${props}] ${elements}')
@@ -175,8 +175,8 @@ function add_skills(t, abilities, active, cat, aeonic)
             if prop then
                 prop = aeonic and lv == 4 and sc_info[prop].aeonic or prop
                 tt[lv][#tt[lv]+1] = settings.color and
-                    '%-17s>> Lv.%d %s%-14s\\cr':format(ability.en, lv, colors[prop], prop) or
-                    '%-17s>> Lv.%d %-14s':format(ability.en, lv, prop)
+                    '%-16s → Lv.%d %s%-14s\\cr':format(ability.en, lv, colors[prop], prop) or
+                    '%-16s → Lv.%d %-14s':format(ability.en, lv, prop)
             end
         end
     end
