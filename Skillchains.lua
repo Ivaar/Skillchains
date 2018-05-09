@@ -42,7 +42,7 @@ default.Show = {burst=_static, pet=S{'BST','SMN'}, props=_static, spell=S{'SCH',
 default.UpdateFrequency = 0.2
 default.aeonic = false
 default.color = false
-default.display = {text={size=12,font='Consolas'},pos={x=0,y=0}}--,bg={visible=false}}
+default.display = {text={size=12,font='Consolas'},pos={x=0,y=0},bg={visible=true}}
 
 settings = config.load(default)
 skill_props = texts.new('',settings.display,settings)
