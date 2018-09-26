@@ -169,6 +169,7 @@ skills[3] = {
     [155] = {en='Tachi: Ageha',skillchain={'Compression','Scission'}},
     [156] = {en='Tachi: Fudo',skillchain={'Light','Distortion'}},
     [157] = {en='Tachi: Shoha',skillchain={'Fragmentation','Compression'},aeonic='Light'},
+    [158] = {en='Tachi: Suikawari',skillchain={'Fusion'}},
     [160] = {en='Shining Strike',skillchain={'Impaction'}},
     [161] = {en='Seraph Strike',skillchain={'Impaction'}},
     [162] = {en='Brainshaker',skillchain={'Reverberation'}},
@@ -223,6 +224,7 @@ skills[3] = {
     [225] = {en='Chant du Cygne',skillchain={'Light','Distortion'}},
     [226] = {en='Requiescat',skillchain={'Gravitation','Scission'},aeonic='Darkness'},
     [227] = {en='Knights of Rotund',skillchain={'Light'}},
+    [228] = {en='Final Paradise',skillchain={'Light'}},
     [238] = {en='Uriel Blade',skillchain={'Light','Fragmentation'}},
     [239] = {en='Glory Slash',skillchain={'Light','Fusion'}},
     }
@@ -681,6 +683,7 @@ skills[11] = {
     [3938] = {en='Somersault',skillchain={'Compression'}},
     [3941] = {en='Pecking Flurry',skillchain={'Transfixion'}},
     [3942] = {en='Sickle Slash',skillchain={'Transfixion'}},
+    [4158] = {en='Blade: Metsu',skillchain={'Darkness','Fragmentation'}},
     }
 
 skills[13] = {
