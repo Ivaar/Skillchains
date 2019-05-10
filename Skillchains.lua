@@ -49,6 +49,7 @@ skill_props = texts.new('',settings.display,settings)
 aeonic_weapon = S{20515,20594,20695,20843,20890,20935,20977,21025,21082,21147,21485,21694,21753,22117}
 message_ids = S{2,110,161,162,185,187,317}
 buff_dur = {[163]=40,[164]=30,[470]=60}
+pet_commands = {[110]=true,[317]=true}
 info = {member = {}}
 resonating = {}
 buffs = {}
@@ -267,12 +268,14 @@ end
 windower.register_event('incoming chunk', function(id, data)
     if id == 0x28 then
         local actor,targets,category,param = data:unpack('Ib10b4b16', 6)
-        local ability = skills[category] and skills[category][param]
         local effect = data:unpack('b17', 27, 6)
+        local msg = data:unpack('b10', 29, 7)
         local prop = skillchain[data:unpack('b6', 35)]
+        category = pet_commands[msg] and skills[13] or category
+        local ability = skills[category] and skills[category][param]
+
         if ability and (category ~= 4 or buffs[actor] and chain_buff(buffs[actor]) or prop) then
             local mob = data:unpack('b32', 19, 7)
-            local msg = data:unpack('b10', 29, 7)
             if prop then
                 local step = (resonating[mob] and resonating[mob].step or 1) + 1
                 local closed = step > 5 or sc_info[prop].lvl > 2 and 
