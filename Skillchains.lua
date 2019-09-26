@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.18.05.08'
+_addon.version = '2.19.09.26'
 
 require('luau')
 require('pack')
@@ -46,7 +46,7 @@ default.display = {text={size=12,font='Consolas'},pos={x=0,y=0},bg={visible=true
 
 settings = config.load(default)
 skill_props = texts.new('',settings.display,settings)
-aeonic_weapon = S{20515,20594,20695,20843,20890,20935,20977,21025,21082,21147,21485,21694,21753,22117}
+aeonic_ids = S{20515,20594,20695,20843,20890,20935,20977,21025,21082,21147,21485,21694,21753,22117}
 message_ids = S{2,110,161,162,185,187,317}
 buff_dur = {[163]=40,[164]=30,[470]=60}
 pet_commands = {[110]=true,[317]=true}
@@ -100,6 +100,12 @@ sc_info = {
     Impaction = {ele={'Lightning'}, Liquefaction='Liquefaction', Detonation='Detonation', lvl=1},
     }
 
+local aeonic_weapon = {}
+
+for id in pairs(aeonic_ids) do
+    aeonic_weapon[id] = res.items[id].english
+end
+    
 initialize = function(text, settings)
     if not windower.ffxi.get_info().logged_in then
         return
@@ -127,17 +133,17 @@ initialize = function(text, settings)
 end
 skill_props:register_event('reload', initialize)
 
-function update_weapon(bag, ind)
+function update_weapon()
     if not settings.Show.weapon[info.job] then
         return
     end
-    local main_weapon = windower.ffxi.get_items(bag, ind).id
+    local main_weapon = windower.ffxi.get_items(info.main_bag, info.main_weapon).id
     if main_weapon ~= 0 then
-        info.aeonic = aeonic_weapon[main_weapon]
+        info.aeonic = aeonic_weapon[main_weapon] or aeonic_weapon[windower.ffxi.get_items(info.range_bag, info.range).id]
         return
     end
     if not check_weapon or coroutine.status(check_weapon) ~= 'suspended' then
-        check_weapon = coroutine.schedule(update_weapon-{bag, ind}, 10)
+        check_weapon = coroutine.schedule(update_weapon, 10)
     end
 end
 
@@ -151,10 +157,10 @@ function aeonic_am(step)
 end
 
 function aeonic_prop(ability, actor)
-    if not ability.aeonic or not info.aeonic and actor == info.player or not settings.aeonic and info.player ~= actor then
-        return ability.skillchain
+    if ability.aeonic and (info.aeonic == ability.en and actor == info.player or settings.aeonic and info.player ~= actor) then
+        return {ability.skillchain[1], ability.skillchain[2], ability.aeonic}
     end
-    return {ability.skillchain[1], ability.skillchain[2], ability.aeonic}
+    return ability.skillchain
 end
 
 function check_props(old, new)
@@ -293,7 +299,13 @@ windower.register_event('incoming chunk', function(id, data)
     elseif id == 0x29 and data:unpack('H', 25) == 206 and data:unpack('I', 9) == info.player then
         buffs[info.player][data:unpack('H', 13)] = nil
     elseif id == 0x50 and data:byte(6) == 0 then
-        update_weapon(data:byte(7), data:byte(5))
+        info.main_weapon = data:byte(5)
+        info.main_bag = data:byte(7)
+        update_weapon()
+    elseif id == 0x50 and data:byte(6) == 2 then
+        info.range = data:byte(5)
+        info.range_bag = data:byte(7)
+        update_weapon()
     elseif id == 0x63 and data:byte(5) == 9 then
         local set_buff = {}
         for n=1,32 do
@@ -384,7 +396,11 @@ end)
 windower.register_event('load', function()
     if windower.ffxi.get_info().logged_in then
         local equip = windower.ffxi.get_items('equipment')
-        update_weapon(equip.main_bag, equip.main)
+        info.main_weapon = equip.main
+        info.main_bag = equip.main_bag
+        info.range = equip.range
+        info.range_bag = equip.range_bag
+        update_weapon()
         buffs[info.player] = {}
     end
     do_loop = do_stuff:loop(settings.UpdateFrequency)
