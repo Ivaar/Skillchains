@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.19.09.26'
+_addon.version = '2.19.09.27'
 
 require('luau')
 require('pack')
@@ -277,7 +277,7 @@ windower.register_event('incoming chunk', function(id, data)
         local effect = data:unpack('b17', 27, 6)
         local msg = data:unpack('b10', 29, 7)
         local prop = skillchain[data:unpack('b6', 35)]
-        category = pet_commands[msg] and skills[13] or category
+        category = pet_commands[msg] and 13 or category
         local ability = skills[category] and skills[category][param]
 
         if ability and (category ~= 4 or buffs[actor] and chain_buff(buffs[actor]) or prop) then
