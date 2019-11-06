@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.19.09.27'
+_addon.version = '2.19.11.05'
 
 require('luau')
 require('pack')
@@ -139,7 +139,7 @@ function update_weapon()
     end
     local main_weapon = windower.ffxi.get_items(info.main_bag, info.main_weapon).id
     if main_weapon ~= 0 then
-        info.aeonic = aeonic_weapon[main_weapon] or aeonic_weapon[windower.ffxi.get_items(info.range_bag, info.range).id]
+        info.aeonic = aeonic_weapon[main_weapon] or info.range and aeonic_weapon[windower.ffxi.get_items(info.range_bag, info.range).id]
         return
     end
     if not check_weapon or coroutine.status(check_weapon) ~= 'suspended' then
