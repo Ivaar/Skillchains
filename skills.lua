@@ -687,7 +687,9 @@ skills[11] = {
     [3938] = {en='Somersault',skillchain={'Compression'}},
     [3941] = {en='Pecking Flurry',skillchain={'Transfixion'}},
     [3942] = {en='Sickle Slash',skillchain={'Transfixion'}},
-    [4034] = {en='Wild Oats',skillchain={'Transfixion'}},
+    [4211] = {en='Iniquitous Stab',skillchain={'Gravitation'}},
+    [4212] = {en='Shockstorm Edge',skillchain={'Detonation'}},
+    [4214] = {en='Lock and Load',skillchain={'Fusion'}},
     [4158] = {en='Blade: Metsu',skillchain={'Darkness','Fragmentation'}},
     }
 
@@ -764,6 +766,9 @@ skills[13] = {
     [776] = {en='Pecking Flurry',skillchain={'Transfixion'}},
     [777] = {en='Sickle Slash',skillchain={'Transfixion'}},
     [780] = {en='Regal Gash',skillchain={'Distortion','Detonation'}},
+    [961] = {en='Welt',skillchain={'Scission'}},
+    [964] = {en='Roundhouse',skillchain={'Detonation'}},
+    [970] = {en='Hysteric Assault',skillchain={'Fragmentation','Transfixion'}},
     }
 
 skills[14] = {
