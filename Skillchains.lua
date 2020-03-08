@@ -47,7 +47,7 @@ default.display = {text={size=12,font='Consolas'},pos={x=0,y=0},bg={visible=true
 settings = config.load(default)
 skill_props = texts.new('',settings.display,settings)
 aeonic_ids = S{20515,20594,20695,20843,20890,20935,20977,21025,21082,21147,21485,21694,21753,22117}
-message_ids = S{2,110,161,162,185,187,317}
+message_ids = S{2,110,161,162,185,187,317,802}
 buff_dur = {[163]=40,[164]=30,[470]=60}
 pet_commands = {[110]=true,[317]=true}
 info = {member = {}}
