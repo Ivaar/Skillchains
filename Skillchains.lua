@@ -28,10 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.19.11.05'
+_addon.version = '2.20.07.22'
 
 require('luau')
 require('pack')
+require('actions')
 texts = require('texts')
 skills = require('skills')
 
@@ -46,10 +47,8 @@ default.display = {text={size=12,font='Consolas'},pos={x=0,y=0},bg={visible=true
 
 settings = config.load(default)
 skill_props = texts.new('',settings.display,settings)
-aeonic_ids = S{20515,20594,20695,20843,20890,20935,20977,21025,21082,21147,21485,21694,21753,22117}
-message_ids = S{2,110,161,162,185,187,317,802}
+message_ids = S{110,161,162,185,187,317,802}
 buff_dur = {[163]=40,[164]=30,[470]=60}
-pet_commands = {[110]=true,[317]=true}
 info = {member = {}}
 resonating = {}
 buffs = {}
@@ -100,12 +99,25 @@ sc_info = {
     Impaction = {ele={'Lightning'}, Liquefaction='Liquefaction', Detonation='Detonation', lvl=1},
     }
 
-local aeonic_weapon = {}
+local aeonic_weapon = {
+    [20515] = 'Godhands',
+    [20594] = 'Aeneas',
+    [20695] = 'Sequence',
+    [20843] = 'Chango',
+    [20890] = 'Anguta',
+    [20935] = 'Trishula',
+    [20977] = 'Heishi Shorinken',
+    [21025] = 'Dojikiri Yasutsuna',
+    [21082] = 'Tishtrya',
+    [21147] = 'Khatvanga',
+    [21485] = 'Fomalhaut',
+    [21694] = 'Lionheart',
+    [21753] = 'Tri-edge',
+    [22117] = 'Fail-Not',
+    [22131] = 'Fail-Not',
+    [22143] = 'Fomalhaut'
+}
 
-for id in pairs(aeonic_ids) do
-    aeonic_weapon[id] = res.items[id].english
-end
-    
 initialize = function(text, settings)
     if not windower.ffxi.get_info().logged_in then
         return
@@ -174,16 +186,18 @@ function check_props(old, new)
     end
 end
 
-function add_skills(t, abilities, active, cat, aeonic)
+function add_skills(t, abilities, active, resource, aeonic)
     local tt = {{},{},{},{}}
-    for k=1,#abilities do local ability = skills[cat][abilities[k]]
-        if ability then
-            local lv, prop = check_props(active, aeonic_prop(ability, info.player))
+    for k=1,#abilities do
+        local ability_id = abilities[k]
+        local skillchain = skills[resource][ability_id]
+        if skillchain then
+            local lv, prop = check_props(active, aeonic_prop(skillchain, info.player))
             if prop then
                 prop = aeonic and lv == 4 and sc_info[prop].aeonic or prop
                 tt[lv][#tt[lv]+1] = settings.color and
-                    '%-16s → Lv.%d %s%-14s\\cr':format(ability.en, lv, colors[prop], prop) or
-                    '%-16s → Lv.%d %-14s':format(ability.en, lv, prop)
+                    '%-16s → Lv.%d %s%-14s\\cr':format(res[resource][ability_id].name, lv, colors[prop], prop) or
+                    '%-16s → Lv.%d %-14s':format(res[resource][ability_id].name, lv, prop)
             end
         end
     end
@@ -198,14 +212,14 @@ end
 function check_results(reson)
     local t = {}
     if settings.Show.spell[info.job] and info.job == 'SCH' then
-        t = add_skills(t, {1,2,3,4,5,6,7,8}, reson.active, 20)
+        t = add_skills(t, {0,1,2,3,4,5,6,7}, reson.active, 'elements')
     elseif settings.Show.spell[info.job] and info.job == 'BLU' then
-        t = add_skills(t, windower.ffxi.get_mjob_data().spells, reson.active, 4)
+        t = add_skills(t, windower.ffxi.get_mjob_data().spells, reson.active, 'spells')
     elseif settings.Show.pet[info.job] and windower.ffxi.get_mob_by_target('pet') then
-        t = add_skills(t, windower.ffxi.get_abilities().job_abilities, reson.active, 13)
+        t = add_skills(t, windower.ffxi.get_abilities().job_abilities, reson.active, 'job_abilities')
     end
     if settings.Show.weapon[info.job] then
-        t = add_skills(t, windower.ffxi.get_abilities().weapon_skills, reson.active, 3, info.aeonic and aeonic_am(reson.step))
+        t = add_skills(t, windower.ffxi.get_abilities().weapon_skills, reson.active, 'weapon_skills', info.aeonic and aeonic_am(reson.step))
     end
     return _raw.table.concat(t, '\n')
 end
@@ -223,32 +237,31 @@ end
 
 function do_stuff()
     local targ = windower.ffxi.get_mob_by_target('t', 'bt')
-    local now = os.time()
+    local now = os.clock()
     for k,v in pairs(resonating) do
         if v.ts and now-v.ts > v.dur then
             resonating[k] = nil
         end
     end
-    if targ and targ.hpp > 0 and resonating[targ.id] and resonating[targ.id].dur-(now-resonating[targ.id].ts) > 0 then
-        local timediff = now-resonating[targ.id].ts
-        local timer = resonating[targ.id].dur-timediff
-        if not resonating[targ.id].closed then
-            resonating[targ.id].disp_info = resonating[targ.id].disp_info or check_results(resonating[targ.id])
-            resonating[targ.id].timer = timediff < resonating[targ.id].wait and 
-                '\\cs(255,0,0)Wait  %d\\cr':format(resonating[targ.id].wait-timediff) or
-                '\\cs(0,255,0)Go!   %d\\cr':format(timer)
+    local reson = targ and resonating[targ.id]
+    if targ and targ.hpp > 0 and reson and reson.dur-(now-reson.ts) > 0 then
+        local timediff = now-reson.ts
+        local timer = reson.dur-timediff
+        if not reson.closed then
+            reson.disp_info = reson.disp_info or check_results(reson)
+            reson.timer = timediff < reson.wait and 
+                '\\cs(255,0,0)Wait  %.1f\\cr':format(reson.wait-timediff) or
+                '\\cs(0,255,0)Go!   %.1f\\cr':format(timer)
         elseif settings.Show.burst[info.job] then
-            resonating[targ.id].disp_info = ''
-            resonating[targ.id].timer = 'Burst %d':format(timer)
+            reson.disp_info = ''
+            reson.timer = 'Burst %d':format(timer)
         else
             resonating[targ.id] = nil
             return
         end
-        resonating[targ.id].props = resonating[targ.id].props or
-            not resonating[targ.id].bound and colorize(resonating[targ.id].active) or 'Chainbound Lv.%d':format(resonating[targ.id].bound)
-        resonating[targ.id].elements = resonating[targ.id].elements or
-            resonating[targ.id].step > 1 and settings.Show.burst[info.job] and '(%s)':format(colorize(sc_info[resonating[targ.id].active[1]].ele)) or ''
-        skill_props:update(resonating[targ.id])
+        reson.props = reson.props or not reson.bound and colorize(reson.active) or 'Chainbound Lv.%d':format(reson.bound)
+        reson.elements = reson.elements or reson.step > 1 and settings.Show.burst[info.job] and '(%s)':format(colorize(sc_info[reson.active[1]].ele)) or ''
+        skill_props:update(reson)
         skill_props:show()
     elseif not visible then
         skill_props:hide()
@@ -271,32 +284,68 @@ function chain_buff(t)
     return t[163] and check_buff(t, 163)
 end
 
-windower.register_event('incoming chunk', function(id, data)
-    if id == 0x28 then
-        local actor,targets,category,param = data:unpack('Ib10b4b16', 6)
-        local effect = data:unpack('b17', 27, 6)
-        local msg = data:unpack('b10', 29, 7)
-        local prop = skillchain[data:unpack('b6', 35)]
-        category = pet_commands[msg] and 13 or category
-        local ability = skills[category] and skills[category][param]
+categories = S{
+    'weaponskill_finish',
+    'spell_finish',
+    'job_ability',
+    'mob_tp_finish',
+    'avatar_tp_finish',
+    'job_ability_unblinkable',
+}
 
-        if ability and (category ~= 4 or buffs[actor] and chain_buff(buffs[actor]) or prop) then
-            local mob = data:unpack('b32', 19, 7)
-            if prop then
-                local step = (resonating[mob] and resonating[mob].step or 1) + 1
-                local closed = step > 5 or sc_info[prop].lvl > 2 and 
-                    (sc_info[prop].lvl == 4 or resonating[mob] and check_props(resonating[mob].active, aeonic_prop(ability, actor)) == 4)
-                resonating[mob] = {en=ability.en, active={prop}, ts=os.time(), dur=11-step, wait=3, step=step, closed=closed}
-            elseif message_ids[msg] then
-                resonating[mob] = {en=ability.en, active=aeonic_prop(ability, actor), ts=os.time(), dur=10, wait=3, step=1}
-            elseif msg == 529 then
-                resonating[mob] = {en=ability.en, active=ability.skillchain, ts=os.time(), dur=ability.dur, wait=1, step=1, bound=effect}
-            end
-        elseif category == 6 and buff_dur[effect] then
-            buffs[actor] = buffs[actor] or {}
-            buffs[actor][effect] = buff_dur[effect] + os.time()
-        end
-    elseif id == 0x29 and data:unpack('H', 25) == 206 and data:unpack('I', 9) == info.player then
+function apply_properties(target, action, properties, dur, wait, step, closed, bound)
+    resonating[target] = {
+        en=action,
+        active=properties,
+        ts=os.clock(),
+        dur=dur+wait,
+        wait=wait,
+        step=step,
+        closed=closed,
+        bound=bound
+    }
+end
+
+function action_handler(act)
+    local actionpacket = ActionPacket.new(act)
+    local category = actionpacket:get_category_string()
+
+    if not categories:contains(category) or act.param == 0 then
+        return
+    end
+
+    local actor = actionpacket:get_id()
+    local target = actionpacket:get_targets()()
+    local action = target:get_actions()()
+    local message_id = action:get_message_id()
+    local add_effect = action:get_add_effect()
+    local param, resource, action_id = action:get_spell()
+    local ability = skills[resource] and skills[resource][action_id]
+
+    if add_effect then
+        local skillchain = add_effect.animation:ucfirst()
+        local level = sc_info[skillchain].lvl
+        local reson = resonating[target.id]
+        local step = (reson and reson.step or 1) + 1
+        local closed = step > 5 or
+            level == 4 or
+            level == 3 and reson and ability and check_props(reson.active, aeonic_prop(ability, actor)) == 4
+
+        apply_properties(target.id, res[resource][action_id].name, {skillchain}, 8-step, ability.wait or 3, step, closed)
+    elseif ability and (message_ids:contains(message_id) or message_id == 2 and buffs[actor] and chain_buff(buffs[actor])) then
+        apply_properties(target.id, res[resource][action_id].name, aeonic_prop(ability, actor), 7, ability.wait or 3, 1)
+    elseif message_id == 529 then
+        apply_properties(target.id, res[resource][action_id].name, ability.skillchain, ability.dur, 1, 1, false, param)
+    elseif message_id == 100 and buff_dur[param] then
+        buffs[actor] = buffs[actor] or {}
+        buffs[actor][param] = buff_dur[param] + os.time()
+    end
+end
+
+ActionPacket.open_listener(action_handler)
+
+windower.register_event('incoming chunk', function(id, data)
+    if id == 0x29 and data:unpack('H', 25) == 206 and data:unpack('I', 9) == info.player then
         buffs[info.player][data:unpack('H', 13)] = nil
     elseif id == 0x50 and data:byte(6) == 0 then
         info.main_weapon = data:byte(5)
@@ -311,9 +360,6 @@ windower.register_event('incoming chunk', function(id, data)
         for n=1,32 do
             local buff = data:unpack('H', n*2+7)
             if buff_dur[buff] or buff > 269 and buff < 273 then
-            --if buff_dur[buff] then
-            --    set_buff[buff] = math.floor(data:unpack('I', n*4+69)/60+1510890319.1)
-            --elseif buff > 269 and buff < 273 then
                 set_buff[buff] = true
             end
         end

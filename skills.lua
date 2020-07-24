@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ]]
 local skills = {}
 
-skills[3] = {
+skills.weapon_skills = {
     [1] = {en='Combo',skillchain={'Impaction'}},
     [2] = {en='Shoulder Tackle',skillchain={'Reverberation','Impaction'}},
     [3] = {en='One Inch Punch',skillchain={'Compression'}},
@@ -229,7 +229,7 @@ skills[3] = {
     [239] = {en='Glory Slash',skillchain={'Light','Fusion'}},
     }
 
-skills[4] = {
+skills.spells = {
     [144] = {en='Fire',skillchain={'Liquefaction'}},
     [145] = {en='Fire II',skillchain={'Liquefaction'}},
     [146] = {en='Fire III',skillchain={'Liquefaction'}},
@@ -337,7 +337,7 @@ skills[4] = {
     [892] = {en='Luminohelix II',skillchain={'Transfixion'}},
     }
 
-skills[11] = {
+skills.monster_abilities = {
     [302] = {en='Wild Oats',skillchain={'Transfixion'}},
     [521] = {en='Spinning Attack',skillchain={'Liquefaction','Impaction'}},
     [584] = {en='Uppercut',skillchain={'Liquefaction','Impaction'}},
@@ -410,9 +410,8 @@ skills[11] = {
     [1483] = {en='Vorpal Blade',skillchain={'Scission','Impaction'}},
     [1489] = {en='Nullifying Dropkick',skillchain={'Induration'}},
     [1490] = {en='Auroral Uppercut',skillchain={'Fragmentation'}},
-    [1508] = {en='Luminous Lance',skillchain={'Light'}},
-    [1509] = {en='Rejuvenation',skillchain={'Light'}},
-    [1510] = {en='Revelation',skillchain={'Fusion'}},
+    [1508] = {en='Luminous Lance',skillchain={'Light','Fusion'},wait=7},
+    [1510] = {en='Revelation',skillchain={'Fusion','Transfixion'},wait=6},
     [1517] = {en='Goblin Rush',skillchain={'Fusion','Impaction'}},
     [1520] = {en='Howling Moon',skillchain={'Darkness','Gravitation'}},
     [1586] = {en='Wild Oats',skillchain={'Transfixion'}},
@@ -590,9 +589,8 @@ skills[11] = {
     [3595] = {en='Fulminous Fury',skillchain={'Fragmentation'}},
     [3596] = {en='No Quarter',skillchain={'Light','Distortion'}},
     [3611] = {en='Inexorable Strike',skillchain={'Fusion'}},
-    [3621] = {en='Luminous Lance',skillchain={'Light'}},
-    [3622] = {en='Rejuvenation',skillchain={'Light'}},
-    [3623] = {en='Revelation',skillchain={'Fusion'}},
+    [3621] = {en='Luminous Lance',skillchain={'Light','Fusion'},wait=7},
+    [3623] = {en='Revelation',skillchain={'Fusion','Transfixion'},wait=6},
     [3632] = {en='Frenzied Thrust',skillchain={'Fragmentation'}},
     [3633] = {en='Sinner\'s Cross',skillchain={'Gravitation'}},
     [3634] = {en='Open Coffin',skillchain={'Fusion'}},
@@ -687,13 +685,15 @@ skills[11] = {
     [3938] = {en='Somersault',skillchain={'Compression'}},
     [3941] = {en='Pecking Flurry',skillchain={'Transfixion'}},
     [3942] = {en='Sickle Slash',skillchain={'Transfixion'}},
+    [4158] = {en='Blade: Metsu',skillchain={'Darkness','Fragmentation'}},
     [4211] = {en='Iniquitous Stab',skillchain={'Gravitation'}},
     [4212] = {en='Shockstorm Edge',skillchain={'Detonation'}},
     [4214] = {en='Lock and Load',skillchain={'Fusion'}},
-    [4158] = {en='Blade: Metsu',skillchain={'Darkness','Fragmentation'}},
     }
 
-skills[13] = {
+skills.job_abilities = {
+    [209] = {en='Wild Flourish',skillchain={'Liquefaction','Induration','Reverberation','Compression','Impaction'},dur=10},
+    [320] = {en='Konzen\-ittai',skillchain={'Light','Darkness','Gravitation','Fragmentation','Distortion','Fusion','Liquefaction','Induration','Reverberation','Compression','Impaction'},dur=60},
     [513] = {en='Poison Nails',skillchain={'Transfixion'}},
     [521] = {en='Regal Scratch',skillchain={'Scission'}},
     [528] = {en='Moonlit Charge',skillchain={'Compression'}},
@@ -771,20 +771,15 @@ skills[13] = {
     [970] = {en='Hysteric Assault',skillchain={'Fragmentation','Transfixion'}},
     }
 
-skills[14] = {
-    [209] = {en='Wild Flourish',skillchain={'Liquefaction','Induration','Reverberation','Compression','Impaction'},dur=10},
-    [320] = {en='Konzen\-ittai',skillchain={'Light','Darkness','Gravitation','Fragmentation','Distortion','Fusion','Liquefaction','Induration','Reverberation','Compression','Impaction'},dur=60},
-    }
-
-skills[20] = {
-    [1] = {en='Fire',skillchain={'Liquefaction'}},
-    [2] = {en='Ice',skillchain={'Induration'}},
-    [3] = {en='Wind',skillchain={'Detonation'}},
-    [4] = {en='Earth',skillchain={'Scission'}},
-    [5] = {en='Lightning',skillchain={'Impaction'}},
-    [6] = {en='Water',skillchain={'Reverberation'}},
-    [7] = {en='Light',skillchain={'Transfixion'}},
-    [8] = {en='Dark',skillchain={'Compression'}},
+skills.elements = {
+    [0] = {en='Fire',skillchain={'Liquefaction'}},
+    [1] = {en='Ice',skillchain={'Induration'}},
+    [2] = {en='Wind',skillchain={'Detonation'}},
+    [3] = {en='Earth',skillchain={'Scission'}},
+    [4] = {en='Lightning',skillchain={'Impaction'}},
+    [5] = {en='Water',skillchain={'Reverberation'}},
+    [6] = {en='Light',skillchain={'Transfixion'}},
+    [7] = {en='Dark',skillchain={'Compression'}},
     }
 
 return skills
