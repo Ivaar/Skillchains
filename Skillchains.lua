@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.20.07.22'
+_addon.version = '2.20.07.25'
 
 require('luau')
 require('pack')
@@ -169,7 +169,7 @@ function aeonic_am(step)
 end
 
 function aeonic_prop(ability, actor)
-    if ability.aeonic and (info.aeonic == ability.en and actor == info.player or settings.aeonic and info.player ~= actor) then
+    if ability.aeonic and (ability.weapon == info.aeonic and actor == info.player or settings.aeonic and info.player ~= actor) then
         return {ability.skillchain[1], ability.skillchain[2], ability.aeonic}
     end
     return ability.skillchain
