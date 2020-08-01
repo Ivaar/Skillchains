@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.20.07.25'
+_addon.version = '2.20.07.31'
 
 require('luau')
 require('pack')
@@ -78,26 +78,26 @@ colors.Detonation =    colors.Wind
 colors.Liquefaction =  colors.Fire
 colors.Impaction =     colors.Lightning
 
-skillchain = {'Light','Darkness','Gravitation','Fragmentation','Distortion','Fusion','Compression','Liquefaction','Induration','Reverberation','Transfixion','Scission','Detonation','Impaction','Radiance','Umbra'}
+skillchains = {'Light','Darkness','Gravitation','Fragmentation','Distortion','Fusion','Compression','Liquefaction','Induration','Reverberation','Transfixion','Scission','Detonation','Impaction','Radiance','Umbra'}
 
 sc_info = {
-    Radiance = {ele={'Fire','Wind','Lightning','Light'}, lvl=4},
-    Umbra = {ele={'Earth','Ice','Water','Dark'}, lvl=4},
-    Light = {ele={'Fire','Wind','Lightning','Light'}, Light='Light', aeonic='Radiance', lvl=3},
-    Darkness = {ele={'Earth','Ice','Water','Dark'}, Darkness='Darkness', aeonic='Umbra', lvl=3},
-    Gravitation = {ele={'Earth','Dark'}, Distortion='Darkness', Fragmentation='Fragmentation', lvl=2},
-    Fragmentation = {ele={'Wind','Lightning'}, Fusion='Light', Distortion='Distortion', lvl=2},
-    Distortion = {ele={'Ice','Water'}, Gravitation='Darkness', Fusion='Fusion', lvl=2},
-    Fusion = {ele={'Fire','Light'}, Fragmentation='Light', Gravitation='Gravitation', lvl=2},
-    Compression = {ele={'Darkness'}, Transfixion='Transfixion', Detonation='Detonation', lvl=1},
-    Liquefaction = {ele={'Fire'}, Impaction='Fusion', Scission='Scission', lvl=1},
-    Induration = {ele={'Ice'}, Reverberation='Fragmentation', Compression='Compression', Impaction='Impaction', lvl=1},
-    Reverberation = {ele={'Water'}, Induration='Induration', Impaction='Impaction', lvl=1},
-    Transfixion = {ele={'Light'}, Scission='Distortion', Reverberation='Reverberation', Compression='Compression', lvl=1},
-    Scission = {ele={'Earth'}, Liquefaction='Liquefaction', Reverberation='Reverberation', Detonation='Detonation', lvl=1},
-    Detonation = {ele={'Wind'}, Compression='Gravitation', Scission='Scission', lvl=1},
-    Impaction = {ele={'Lightning'}, Liquefaction='Liquefaction', Detonation='Detonation', lvl=1},
-    }
+    Radiance = {'Fire','Wind','Lightning','Light', lvl=4},
+    Umbra = {'Earth','Ice','Water','Dark', lvl=4},
+    Light = {'Fire','Wind','Lightning','Light', Light={4,'Light'}, aeonic={4,'Radiance'}, lvl=3},
+    Darkness = {'Earth','Ice','Water','Dark', Darkness={4,'Darkness'}, aeonic={4,'Umbra'}, lvl=3},
+    Gravitation = {'Earth','Dark', Distortion={3,'Darkness'}, Fragmentation={2,'Fragmentation'}, lvl=2},
+    Fragmentation = {'Wind','Lightning', Fusion={3,'Light'}, Distortion={2,'Distortion'}, lvl=2},
+    Distortion = {'Ice','Water', Gravitation={3,'Darkness'}, Fusion={2,'Fusion'}, lvl=2},
+    Fusion = {'Fire','Light', Fragmentation={3,'Light'}, Gravitation={2,'Gravitation'}, lvl=2},
+    Compression = {'Darkness', Transfixion={1,'Transfixion'}, Detonation={1,'Detonation'}, lvl=1},
+    Liquefaction = {'Fire', Impaction={2,'Fusion'}, Scission={1,'Scission'}, lvl=1},
+    Induration = {'Ice', Reverberation={2,'Fragmentation'}, Compression={1,'Compression'}, Impaction={1,'Impaction'}, lvl=1},
+    Reverberation = {'Water', Induration={1,'Induration'}, Impaction={1,'Impaction'}, lvl=1},
+    Transfixion = {'Light', Scission={2,'Distortion'}, Reverberation={1,'Reverberation'}, Compression={1,'Compression'}, lvl=1},
+    Scission = {'Earth', Liquefaction={1,'Liquefaction'}, Reverberation={1,'Reverberation'}, Detonation={1,'Detonation'}, lvl=1},
+    Detonation = {'Wind', Compression={2,'Gravitation'}, Scission={1,'Scission'}, lvl=1},
+    Impaction = {'Lightning', Liquefaction={1,'Liquefaction'}, Detonation={1,'Detonation'}, lvl=1},
+}
 
 local aeonic_weapon = {
     [20515] = 'Godhands',
@@ -177,10 +177,14 @@ end
 
 function check_props(old, new)
     local n = #old < 4 and #new or 1
-    for k=1,#old do
-        for i=1,n do local v = sc_info[old[k]][new[i]]
-            if v then
-                return sc_info[v].lvl == 3 and old[k] == new[i] and 4 or sc_info[v].lvl, v
+    for k = 1, #old do
+        local first = old[k]
+        for i = 1, n do
+            local second = new[i]
+            local result = sc_info[first][second]
+            if result then
+                return unpack(result)
+                --return sc_info[result].lvl, result
             end
         end
     end
@@ -235,15 +239,22 @@ function colorize(t)
     return _raw.table.concat(temp or t, ',')
 end
 
-function do_stuff()
-    local targ = windower.ffxi.get_mob_by_target('t', 'bt')
+lasttime = os.clock()
+
+windower.register_event('prerender', function()
     local now = os.clock()
+
+    if now - lasttime > 0.1 then lasttime = now else return end
+
     for k,v in pairs(resonating) do
-        if v.ts and now-v.ts > v.dur then
+        if v.ts and now-v.ts > v.dur + 5 then
             resonating[k] = nil
         end
     end
+
+    local targ = windower.ffxi.get_mob_by_target('t', 'bt')
     local reson = targ and resonating[targ.id]
+
     if targ and targ.hpp > 0 and reson and reson.dur-(now-reson.ts) > 0 then
         local timediff = now-reson.ts
         local timer = reson.dur-timediff
@@ -260,13 +271,13 @@ function do_stuff()
             return
         end
         reson.props = reson.props or not reson.bound and colorize(reson.active) or 'Chainbound Lv.%d':format(reson.bound)
-        reson.elements = reson.elements or reson.step > 1 and settings.Show.burst[info.job] and '(%s)':format(colorize(sc_info[reson.active[1]].ele)) or ''
+        reson.elements = reson.elements or reson.step > 1 and settings.Show.burst[info.job] and '(%s)':format(colorize(sc_info[reson.active[1]])) or ''
         skill_props:update(reson)
         skill_props:show()
     elseif not visible then
         skill_props:hide()
     end
-end
+end)
 
 function check_buff(t, i)
     if t[i] == true or t[i] - os.time() > 0 then
@@ -319,18 +330,17 @@ function action_handler(act)
     local action = target:get_actions()()
     local message_id = action:get_message_id()
     local add_effect = action:get_add_effect()
-    local param, resource, action_id = action:get_spell()
+    local param, resource, action_id, interruption, conclusion = action:get_spell()
     local ability = skills[resource] and skills[resource][action_id]
 
-    if add_effect then
+    if add_effect and not interruption and conclusion then
         local skillchain = add_effect.animation:ucfirst()
         local level = sc_info[skillchain].lvl
         local reson = resonating[target.id]
         local step = (reson and reson.step or 1) + 1
         local closed = step > 5 or
             level == 4 or
-            level == 3 and reson and ability and check_props(reson.active, aeonic_prop(ability, actor)) == 4
-
+            level == 3 and reson and ability and 4 == check_props(reson.active, aeonic_prop(ability, actor))
         apply_properties(target.id, res[resource][action_id].name, {skillchain}, 8-step, ability.wait or 3, step, closed)
     elseif ability and (message_ids:contains(message_id) or message_id == 2 and buffs[actor] and chain_buff(buffs[actor])) then
         apply_properties(target.id, res[resource][action_id].name, aeonic_prop(ability, actor), 7, ability.wait or 3, 1)
@@ -449,12 +459,10 @@ windower.register_event('load', function()
         update_weapon()
         buffs[info.player] = {}
     end
-    do_loop = do_stuff:loop(settings.UpdateFrequency)
 end)
 
 windower.register_event('unload', function()
     coroutine.close(check_weapon)
-    coroutine.close(do_loop)
 end)
 
 windower.register_event('logout', function()
