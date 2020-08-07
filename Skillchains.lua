@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.20.07.31'
+_addon.version = '2.20.08.06'
 
 require('luau')
 require('pack')
@@ -47,9 +47,9 @@ default.display = {text={size=12,font='Consolas'},pos={x=0,y=0},bg={visible=true
 
 settings = config.load(default)
 skill_props = texts.new('',settings.display,settings)
-message_ids = S{110,161,162,185,187,317,802}
+message_ids = S{110,185,187,317,802}
 buff_dur = {[163]=40,[164]=30,[470]=60}
-info = {member = {}}
+info = {}
 resonating = {}
 buffs = {}
 
@@ -99,6 +99,11 @@ sc_info = {
     Impaction = {'Lightning', Liquefaction={1,'Liquefaction'}, Detonation={1,'Detonation'}, lvl=1},
 }
 
+chainbound = {}
+chainbound[1] = L{'Compression','Liquefaction','Induration','Reverberation','Scission'}
+chainbound[2] = L{'Gravitation','Fragmentation','Distortion'} + chainbound[1]
+chainbound[3] = L{'Light','Darkness'} + chainbound[2]
+
 local aeonic_weapon = {
     [20515] = 'Godhands',
     [20594] = 'Aeneas',
@@ -132,7 +137,7 @@ initialize = function(text, settings)
         properties:append('${timer}')
     end
     if settings.Show.step[info.job] then
-        properties:append('Step: ${step} → ${en}')
+        properties:append('Step: ${step} → ${name}')
     end
     if settings.Show.props[info.job] then
         properties:append('[${props}] ${elements}')
@@ -239,37 +244,43 @@ function colorize(t)
     return _raw.table.concat(temp or t, ',')
 end
 
-lasttime = os.clock()
+local next_frame = os.clock()
 
 windower.register_event('prerender', function()
     local now = os.clock()
 
-    if now - lasttime > 0.1 then lasttime = now else return end
+    if now < next_frame then
+        return
+    end
 
-    for k,v in pairs(resonating) do
-        if v.ts and now-v.ts > v.dur + 5 then
+    next_frame = now + 0.1
+
+    for k, v in pairs(resonating) do
+        if v.times - now > 10 then
             resonating[k] = nil
         end
     end
 
     local targ = windower.ffxi.get_mob_by_target('t', 'bt')
-    local reson = targ and resonating[targ.id]
+    targ_id = targ and targ.id
+    local reson = resonating[targ_id]
+    local timer = reson and (reson.times - now) or 0
 
-    if targ and targ.hpp > 0 and reson and reson.dur-(now-reson.ts) > 0 then
-        local timediff = now-reson.ts
-        local timer = reson.dur-timediff
+    if targ and targ.hpp > 0 and timer > 0 then
         if not reson.closed then
             reson.disp_info = reson.disp_info or check_results(reson)
-            reson.timer = timediff < reson.wait and 
-                '\\cs(255,0,0)Wait  %.1f\\cr':format(reson.wait-timediff) or
+            local delay = reson.delay
+            reson.timer = now < delay and
+                '\\cs(255,0,0)Wait  %.1f\\cr':format(delay - now) or
                 '\\cs(0,255,0)Go!   %.1f\\cr':format(timer)
         elseif settings.Show.burst[info.job] then
             reson.disp_info = ''
             reson.timer = 'Burst %d':format(timer)
         else
-            resonating[targ.id] = nil
+            resonating[targ_id] = nil
             return
         end
+        reson.name = res[reson.res][reson.id].name
         reson.props = reson.props or not reson.bound and colorize(reson.active) or 'Chainbound Lv.%d':format(reson.bound)
         reson.elements = reson.elements or reson.step > 1 and settings.Show.burst[info.job] and '(%s)':format(colorize(sc_info[reson.active[1]])) or ''
         skill_props:update(reson)
@@ -304,17 +315,21 @@ categories = S{
     'job_ability_unblinkable',
 }
 
-function apply_properties(target, action, properties, dur, wait, step, closed, bound)
+function apply_properties(target, resource, action_id, properties, delay, step, closed, bound)
+    local clock = os.clock()
     resonating[target] = {
-        en=action,
+        res=resource,
+        id=action_id,
         active=properties,
-        ts=os.clock(),
-        dur=dur+wait,
-        wait=wait,
+        delay=clock+delay,
+        times=clock+delay+8-step,
         step=step,
         closed=closed,
         bound=bound
     }
+    if target == targ_id then
+        next_frame = clock
+    end
 end
 
 function action_handler(act)
@@ -330,6 +345,7 @@ function action_handler(act)
     local action = target:get_actions()()
     local message_id = action:get_message_id()
     local add_effect = action:get_add_effect()
+    --local basic_info = action:get_basic_info()
     local param, resource, action_id, interruption, conclusion = action:get_spell()
     local ability = skills[resource] and skills[resource][action_id]
 
@@ -337,15 +353,20 @@ function action_handler(act)
         local skillchain = add_effect.animation:ucfirst()
         local level = sc_info[skillchain].lvl
         local reson = resonating[target.id]
+        local delay = ability and ability.delay or 3
         local step = (reson and reson.step or 1) + 1
-        local closed = step > 5 or
-            level == 4 or
-            level == 3 and reson and ability and 4 == check_props(reson.active, aeonic_prop(ability, actor))
-        apply_properties(target.id, res[resource][action_id].name, {skillchain}, 8-step, ability.wait or 3, step, closed)
+
+        if level == 3 and reson and ability then
+            level = check_props(reson.active, aeonic_prop(ability, actor))
+        end
+
+        local closed = step > 5 or level == 4
+
+        apply_properties(target.id, resource, action_id, {skillchain}, delay, step, closed)
     elseif ability and (message_ids:contains(message_id) or message_id == 2 and buffs[actor] and chain_buff(buffs[actor])) then
-        apply_properties(target.id, res[resource][action_id].name, aeonic_prop(ability, actor), 7, ability.wait or 3, 1)
+        apply_properties(target.id, resource, action_id, aeonic_prop(ability, actor), ability.delay or 3, 1)
     elseif message_id == 529 then
-        apply_properties(target.id, res[resource][action_id].name, ability.skillchain, ability.dur, 1, 1, false, param)
+        apply_properties(target.id, resource, action_id, chainbound[param], 2, 1, false, param)
     elseif message_id == 100 and buff_dur[param] then
         buffs[actor] = buffs[actor] or {}
         buffs[actor][param] = buff_dur[param] + os.time()
@@ -374,29 +395,6 @@ windower.register_event('incoming chunk', function(id, data)
             end
         end
         buffs[info.player] = set_buff
-    --[[elseif id == 0x076 then
-        local pos = 5
-        for i = 1,5 do
-            local id = data:unpack('I', pos)
-            if id == 0 then
-                if not info.member[i] then
-                    break
-                end
-        ]]--        buffs[info.member[i]] = nil
-        --[[        info.member[i] = nil
-            else
-                info.member[i] = id
-                local set_buff = {}
-                for n=0,31 do
-                    local buff = data:byte(pos+16+n)+256*(math.floor(data:byte(pos+8+math.floor(n/4))/4^(n%4))%4)
-                    if buff_dur[buff] then
-                        set_buff[buff] = true
-                    end
-                end
-                buffs[id] = set_buff
-            end
-            pos = pos + 48
-        end]]
     end
 end)
 
@@ -468,7 +466,7 @@ end)
 windower.register_event('logout', function()
     coroutine.close(check_weapon)
     check_weapon = nil
-    info = {member = {}}
+    info = {}
     resonating = {}
     buffs = {}
 end)
