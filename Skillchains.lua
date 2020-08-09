@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.20.08.06'
+_addon.version = '2.20.08.08'
 
 require('luau')
 require('pack')
@@ -181,15 +181,17 @@ function aeonic_prop(ability, actor)
 end
 
 function check_props(old, new)
-    local n = #old < 4 and #new or 1
     for k = 1, #old do
         local first = old[k]
-        for i = 1, n do
+        local combo = sc_info[first]
+        for i = 1, #new do
             local second = new[i]
-            local result = sc_info[first][second]
+            local result = combo[second]
             if result then
                 return unpack(result)
-                --return sc_info[result].lvl, result
+            end
+            if #old > 3 and combo.lvl == sc_info[second].lvl then
+                break
             end
         end
     end
@@ -256,7 +258,7 @@ windower.register_event('prerender', function()
     next_frame = now + 0.1
 
     for k, v in pairs(resonating) do
-        if v.times - now > 10 then
+        if v.times - now + 10 < 0 then
             resonating[k] = nil
         end
     end
