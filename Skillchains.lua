@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.20.08.08'
+_addon.version = '2.20.08.17'
 
 require('luau')
 require('pack')
@@ -351,7 +351,7 @@ function action_handler(act)
     local param, resource, action_id, interruption, conclusion = action:get_spell()
     local ability = skills[resource] and skills[resource][action_id]
 
-    if add_effect and not interruption and conclusion then
+    if add_effect and add_effect.conclusion and conclusion then
         local skillchain = add_effect.animation:ucfirst()
         local level = sc_info[skillchain].lvl
         local reson = resonating[target.id]
