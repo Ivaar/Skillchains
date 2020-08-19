@@ -352,7 +352,7 @@ function action_handler(act)
     local param, resource, action_id, interruption, conclusion = action:get_spell()
     local ability = skills[resource] and skills[resource][action_id]
 
-    if add_effect and conclusion and skillchains_ids:contains(add_effect.message_id) then
+    if add_effect and conclusion and skillchain_ids:contains(add_effect.message_id) then
         local skillchain = add_effect.animation:ucfirst()
         local level = sc_info[skillchain].lvl
         local reson = resonating[target.id]
