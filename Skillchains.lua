@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.20.08.17'
+_addon.version = '2.20.08.18'
 
 require('luau')
 require('pack')
@@ -48,6 +48,7 @@ default.display = {text={size=12,font='Consolas'},pos={x=0,y=0},bg={visible=true
 settings = config.load(default)
 skill_props = texts.new('',settings.display,settings)
 message_ids = S{110,185,187,317,802}
+skillchain_ids = S{288,289,290,291,292,293,294,295,296,297,298,299,300,301,385,386,387,388,389,390,391,392,393,394,395,396,397,767,768,769,770}
 buff_dur = {[163]=40,[164]=30,[470]=60}
 info = {}
 resonating = {}
@@ -351,7 +352,7 @@ function action_handler(act)
     local param, resource, action_id, interruption, conclusion = action:get_spell()
     local ability = skills[resource] and skills[resource][action_id]
 
-    if add_effect and add_effect.conclusion and conclusion then
+    if add_effect and conclusion and skillchains_ids:contains(add_effect.message_id) then
         local skillchain = add_effect.animation:ucfirst()
         local level = sc_info[skillchain].lvl
         local reson = resonating[target.id]
