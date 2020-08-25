@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '2.20.08.18'
+_addon.version = '2.20.08.25'
 
 require('luau')
 require('pack')
@@ -84,8 +84,8 @@ skillchains = {'Light','Darkness','Gravitation','Fragmentation','Distortion','Fu
 sc_info = {
     Radiance = {'Fire','Wind','Lightning','Light', lvl=4},
     Umbra = {'Earth','Ice','Water','Dark', lvl=4},
-    Light = {'Fire','Wind','Lightning','Light', Light={4,'Light'}, aeonic={4,'Radiance'}, lvl=3},
-    Darkness = {'Earth','Ice','Water','Dark', Darkness={4,'Darkness'}, aeonic={4,'Umbra'}, lvl=3},
+    Light = {'Fire','Wind','Lightning','Light', Light={4,'Light','Radiance'}, lvl=3},
+    Darkness = {'Earth','Ice','Water','Dark', Darkness={4,'Darkness','Umbra'}, lvl=3},
     Gravitation = {'Earth','Dark', Distortion={3,'Darkness'}, Fragmentation={2,'Fragmentation'}, lvl=2},
     Fragmentation = {'Wind','Lightning', Fusion={3,'Light'}, Distortion={2,'Distortion'}, lvl=2},
     Distortion = {'Ice','Water', Gravitation={3,'Darkness'}, Fusion={2,'Fusion'}, lvl=2},
@@ -198,15 +198,15 @@ function check_props(old, new)
     end
 end
 
-function add_skills(t, abilities, active, resource, aeonic)
+function add_skills(t, abilities, active, resource, AM)
     local tt = {{},{},{},{}}
     for k=1,#abilities do
         local ability_id = abilities[k]
         local skillchain = skills[resource][ability_id]
         if skillchain then
-            local lv, prop = check_props(active, aeonic_prop(skillchain, info.player))
+            local lv, prop, aeonic = check_props(active, aeonic_prop(skillchain, info.player))
             if prop then
-                prop = aeonic and lv == 4 and sc_info[prop].aeonic or prop
+                prop = AM and aeonic or prop
                 tt[lv][#tt[lv]+1] = settings.color and
                     '%-16s → Lv.%d %s%-14s\\cr':format(res[resource][ability_id].name, lv, colors[prop], prop) or
                     '%-16s → Lv.%d %-14s':format(res[resource][ability_id].name, lv, prop)
