@@ -29,3 +29,12 @@ The following commands toggle the display information and are saved on a per job
     //sc step     -- current weaponskill step information.
 
 More settings related to text object can be found within the settings.xml, generated on addon load
+
+How to install : 
+1- Download the code from github
+2- unzip it and remove the "-master" from the name
+3- find windower folder in your computer ( C:\Program Files (x86)\Windower ) 
+4- go into the folder addons
+5- place the unziped folder into the addons folder
+6- in the game type "//lua load skillchains"
+7- enjoy !
